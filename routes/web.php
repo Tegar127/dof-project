@@ -1,10 +1,24 @@
 <?php
 
+use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\DocumentController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('auth.login');
 });
 
-Route::get('/create', [DocumentController::class, 'create'])->name('documents.create');
+Route::get('/login', function () {
+    return view('auth.login');
+})->name('login');
+
+Route::get('/dashboard', function () {
+    return view('dashboard.index');
+})->name('dashboard');
+
+Route::get('/admin', function () {
+    return view('admin.index');
+})->name('admin');
+
+Route::get('/editor/{id?}', function ($id = 'new') {
+    return view('editor.index', ['documentId' => $id]);
+})->name('editor');
