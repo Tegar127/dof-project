@@ -28,11 +28,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Document routes (all authenticated users)
     Route::apiResource('documents', DocumentController::class);
+    Route::get('/groups', [GroupController::class, 'index']);
 
     // Admin only routes
     Route::middleware('role:admin')->group(function () {
         Route::apiResource('users', UserController::class);
-        Route::get('/groups', [GroupController::class, 'index']);
         Route::post('/groups', [GroupController::class, 'store']);
     });
 });

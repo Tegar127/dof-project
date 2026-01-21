@@ -5,6 +5,61 @@
 @section('content')
 <div class="flex flex-col lg:flex-row h-screen overflow-hidden bg-gray-100" x-data="editorApp()" x-init="init()">
     
+    <!-- Send Document Modal -->
+    <div x-show="showSendModal" x-transition class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+        <div @click.away="showSendModal = false" class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <h3 class="text-xl font-bold mb-2 text-slate-800">Kirim Dokumen</h3>
+            <p class="text-gray-500 text-sm mb-6">Pilih tujuan pengiriman dokumen ini.</p>
+
+            <div class="space-y-4">
+                <div class="space-y-2">
+                    <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors" :class="document.target_role === 'group' ? 'border-indigo-500 bg-indigo-50/50' : ''">
+                        <input type="radio" name="target" value="group" x-model="document.target_role" class="text-indigo-600 focus:ring-indigo-500">
+                        <div>
+                            <span class="block text-sm font-bold text-slate-800">Group / Divisi</span>
+                            <span class="block text-xs text-slate-500">Kirim ke divisi terkait untuk diproses.</span>
+                        </div>
+                    </label>
+                    
+                    <div x-show="document.target_role === 'group'" x-transition class="pl-8">
+                        <select x-model="document.target_value" class="w-full p-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">-- Pilih Group --</option>
+                            <template x-for="group in groups" :key="group">
+                                <option :value="group" x-text="group"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors" :class="document.target_role === 'dispo' ? 'border-indigo-500 bg-indigo-50/50' : ''">
+                        <input type="radio" name="target" value="dispo" x-model="document.target_role" class="text-indigo-600 focus:ring-indigo-500">
+                        <div>
+                            <span class="block text-sm font-bold text-slate-800">Disposisi (Reviewer)</span>
+                            <span class="block text-xs text-slate-500">Kirim ke reviewer untuk diperiksa.</span>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="flex gap-3 pt-4">
+                    <button
+                        @click="showSendModal = false"
+                        class="flex-1 py-2.5 text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        @click="confirmSend()"
+                        class="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors shadow-sm flex justify-center items-center gap-2"
+                    >
+                        <span>Kirim Sekarang</span>
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Left Sidebar: Input Form -->
     <div class="w-full lg:w-1/3 bg-white flex flex-col border-r border-gray-200 shadow-lg z-10 h-full">
         
@@ -195,29 +250,13 @@
 
                 <template x-if="currentUser?.role === 'user' && (document.status === 'draft' || document.status === 'needs_revision')">
                     <div class="space-y-3">
-                         <h4 class="text-sm font-semibold text-gray-700">Kirim Ke</h4>
-                        <div class="space-y-2">
-                            <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-slate-50">
-                                <input type="radio" name="target" value="group" x-model="document.target_role" class="text-indigo-600">
-                                <span class="text-sm font-medium text-slate-700">Group / Divisi</span>
-                            </label>
-                            <template x-if="document.target_role === 'group'">
-                                <select x-model="document.target_value" class="w-full p-2 border border-gray-300 rounded text-sm ml-6 w-[calc(100%-1.5rem)]">
-                                    <option value="">Pilih Group...</option>
-                                    <template x-for="group in groups" :key="group">
-                                        <option :value="group" x-text="group"></option>
-                                    </template>
-                                </select>
-                            </template>
-
-                            <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-slate-50">
-                                <input type="radio" name="target" value="dispo" x-model="document.target_role" class="text-indigo-600">
-                                <span class="text-sm font-medium text-slate-700">Disposisi (Reviewer)</span>
-                            </label>
-                        </div>
-                        <button @click="saveDocument()" class="w-full bg-indigo-600 text-white py-2 rounded font-bold hover:bg-indigo-700 shadow text-sm mt-4">
-                            SIMPAN & UPDATE
+                        <button @click="showSendModal = true" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all text-sm flex justify-center items-center gap-2">
+                            <span>KIRIM DOKUMEN</span>
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                            </svg>
                         </button>
+                        <p class="text-center text-xs text-slate-400">Dokumen akan dikirim ke Group atau Reviewer.</p>
                     </div>
                 </template>
             </div>
@@ -387,7 +426,9 @@ function editorApp() {
     return {
         documentId: null,
         currentUser: null,
+        token: null,
         saving: false,
+        showSendModal: false,
         groups: [],
         document: {
             title: '',
@@ -420,11 +461,14 @@ function editorApp() {
 
         async init() {
             const userData = localStorage.getItem('dof_user');
-            if (!userData) {
+            const token = localStorage.getItem('dof_token');
+            
+            if (!userData || !token) {
                 window.location.href = '/login';
                 return;
             }
             this.currentUser = JSON.parse(userData);
+            this.token = token;
 
             const path = window.location.pathname;
             this.documentId = path.split('/').pop();
@@ -452,14 +496,24 @@ function editorApp() {
 
         async loadGroups() {
             try {
-                const response = await fetch('/api/groups');
+                const response = await fetch('/api/groups', {
+                    headers: {
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json'
+                    }
+                });
                 if (response.ok) this.groups = await response.json();
             } catch (e) { console.error(e); }
         },
 
         async loadDocument() {
             try {
-                const response = await fetch(`/api/documents/${this.documentId}`);
+                const response = await fetch(`/api/documents/${this.documentId}`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json'
+                    }
+                });
                 if (response.ok) {
                     const doc = await response.json();
                     this.document = doc;
@@ -483,6 +537,19 @@ function editorApp() {
             }
         },
 
+        async confirmSend() {
+            if (!this.document.target_role) {
+                alert('Pilih tujuan pengiriman!');
+                return;
+            }
+            if (this.document.target_role === 'group' && !this.document.target_value) {
+                alert('Pilih group tujuan!');
+                return;
+            }
+            this.showSendModal = false;
+            await this.saveDocument();
+        },
+
         async saveDocument() {
             this.saving = true;
             try {
@@ -503,7 +570,11 @@ function editorApp() {
 
                 const response = await fetch(url, {
                     method: method,
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify(payload)
                 });
 
@@ -529,7 +600,11 @@ function editorApp() {
             try {
                 const response = await fetch(`/api/documents/${this.document.id}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({
                         status: newStatus,
                         feedback: this.document.feedback

@@ -12,10 +12,19 @@ class GroupSeeder extends Seeder
      */
     public function run(): void
     {
-        $groups = ['Sekretariat', 'Keuangan', 'Umum', 'Teknis'];
+        $groups = [
+            'Kepatuhan & Hukum',
+            'Strategi SDM',
+            'Kepesertaan',
+            'Sistem Informasi',
+            'Personalia',
+            'Pelatihan & Pengembangan',
+            'Umum',
+            'Sekretariat Perusahaan'
+        ];
 
         foreach ($groups as $group) {
-            \App\Models\Group::create(['name' => $group]);
+            \App\Models\Group::updateOrCreate(['name' => $group]);
         }
     }
 }
