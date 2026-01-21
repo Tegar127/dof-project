@@ -5,6 +5,25 @@
 @section('content')
 <div class="flex flex-col lg:flex-row h-screen overflow-hidden bg-gray-100" x-data="editorApp()" x-init="init()">
     
+    <!-- Read Only Modal -->
+    <div x-show="showReadOnlyModal" x-cloak x-transition class="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4">
+        <div @click.away="showReadOnlyModal = false" class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 text-center">
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600">
+                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold mb-2 text-slate-800">Mode Baca-Saja</h3>
+            <p class="text-gray-500 text-sm mb-6">Dokumen ini sedang diproses atau telah disetujui. Anda tidak dapat melakukan perubahan pada konten saat ini.</p>
+            <button 
+                @click="showReadOnlyModal = false" 
+                class="w-full py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors shadow-sm"
+            >
+                Mengerti
+            </button>
+        </div>
+    </div>
+
     <!-- Send Document Modal -->
     <div x-show="showSendModal" x-cloak x-transition class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
         <div @click.away="showSendModal = false" class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
@@ -74,7 +93,7 @@
             <div class="flex gap-2">
                 <button 
                     @click="saveDocument()" 
-                    :disabled="saving"
+                    :disabled="saving || !isEditable()"
                     class="bg-indigo-600 text-white px-3 py-1.5 rounded text-sm font-bold hover:bg-indigo-700 flex items-center gap-1 disabled:opacity-50"
                 >
                     <svg x-show="!saving" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -95,13 +114,32 @@
                               x-text="document.type === 'nota' ? 'Nota Dinas' : 'SPPD'"></span>
                         <div class="text-[10px] px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 font-bold uppercase tracking-wider" x-text="getStatusLabel(document.status)"></div>
                     </div>
-                    <input type="text" x-model="document.title" class="bg-transparent border-none p-0 text-base font-bold text-slate-800 focus:ring-0 w-full" placeholder="Input Nama Dokumen...">
+                    <input type="text" x-model="document.title" :disabled="!isEditable()" class="bg-transparent border-none p-0 text-base font-bold text-slate-800 focus:ring-0 w-full disabled:text-slate-500" placeholder="Input Nama Dokumen...">
                 </div>
             </div>
         </div>
 
         <!-- Form Fields -->
         <div class="p-6 overflow-y-auto flex-grow space-y-4">
+            
+            <template x-if="!isEditable() && currentUser?.role === 'user'">
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3 shadow-sm mb-2">
+                    <div class="bg-blue-100 p-2 rounded-lg text-blue-600">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-blue-900">Dokumen Terkunci</h4>
+                        <p class="text-xs text-blue-700 mt-0.5 leading-relaxed">
+                            Status: <span class="font-bold capitalize" x-text="getStatusLabel(document.status)"></span>. 
+                            Konten tidak dapat diubah karena sedang dalam proses review atau sudah disetujui.
+                        </p>
+                    </div>
+                </div>
+            </template>
+
+            <fieldset :disabled="!isEditable()" class="space-y-4 border-none p-0 m-0">
             
             <div class="space-y-2">
                 <label class="block text-sm font-medium text-gray-700">Nomor Dokumen</label>
@@ -215,6 +253,7 @@
                     </div>
                 </div>
             </template>
+            </fieldset>
 
             <!-- Target / Status Section -->
             <div class="border-t border-gray-200 pt-4 mt-4">

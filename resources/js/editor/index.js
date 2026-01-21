@@ -1,10 +1,18 @@
 window.editorApp = function() {
     return {
+        isEditable() {
+            if (!this.currentUser) return false;
+            if (this.currentUser.role === 'admin') return true;
+            if (this.currentUser.role === 'reviewer') return false;
+            return this.document.status === 'draft' || this.document.status === 'needs_revision';
+        },
+
         documentId: null,
         currentUser: null,
         token: null,
         saving: false,
         showSendModal: false,
+        showReadOnlyModal: false,
         groups: [],
         document: {
             title: '',
@@ -93,6 +101,12 @@ window.editorApp = function() {
                 if (response.ok) {
                     const doc = await response.json();
                     this.document = doc;
+                    
+                    // Show read-only notice if user is staff and document is locked
+                    if (!this.isEditable() && this.currentUser.role === 'user') {
+                        this.showReadOnlyModal = true;
+                    }
+
                     // Ensure content_data has arrays initialized if they were null
                     if(!this.document.content_data) this.document.content_data = {};
                     if(!this.document.content_data.basis) this.document.content_data.basis = [''];
@@ -140,6 +154,9 @@ window.editorApp = function() {
         },
 
         async saveDocument(redirectOnCreate = true) {
+            if (!this.isEditable() && this.currentUser.role !== 'admin') {
+                return false;
+            }
             this.saving = true;
             try {
                 const url = this.document.id ? `/api/documents/${this.document.id}` : '/api/documents';
