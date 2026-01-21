@@ -159,15 +159,17 @@ window.editorApp = function() {
 
             this.showSendModal = false;
             
-            const success = await this.saveDocument(false); // Pass false to prevent auto-redirect on new doc, we handle it here
+            // Pass 'false' for redirect, and 'true' for force save (bypass isEditable check)
+            const success = await this.saveDocument(false, true); 
             
             if (success) {
                 window.location.href = '/dashboard?success=sent';
             }
         },
 
-        async saveDocument(redirectOnCreate = true) {
-            if (!this.isEditable() && this.currentUser.role !== 'admin') {
+        async saveDocument(redirectOnCreate = true, force = false) {
+            // Allow save if force is true, or if editable, or if admin
+            if (!force && !this.isEditable() && this.currentUser.role !== 'admin') {
                 return false;
             }
             this.saving = true;
