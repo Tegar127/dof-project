@@ -6,7 +6,7 @@
 <div class="flex flex-col lg:flex-row h-screen overflow-hidden bg-gray-100" x-data="editorApp()" x-init="init()">
     
     <!-- Send Document Modal -->
-    <div x-show="showSendModal" x-transition class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div x-show="showSendModal" x-cloak x-transition class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
         <div @click.away="showSendModal = false" class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
             <h3 class="text-xl font-bold mb-2 text-slate-800">Kirim Dokumen</h3>
             <p class="text-gray-500 text-sm mb-6">Pilih tujuan pengiriman dokumen ini.</p>
@@ -559,8 +559,7 @@ function editorApp() {
             const success = await this.saveDocument(false); // Pass false to prevent auto-redirect on new doc, we handle it here
             
             if (success) {
-                alert('Dokumen berhasil dikirim!');
-                window.location.href = '/dashboard';
+                window.location.href = '/dashboard?success=sent';
             }
         },
 

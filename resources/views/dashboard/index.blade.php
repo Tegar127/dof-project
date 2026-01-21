@@ -4,8 +4,27 @@
 
 @section('content')
 <div class="min-h-screen bg-slate-50/50 font-sans text-slate-900" x-data="dashboardApp()" x-init="init()">
+    <!-- Success Modal -->
+    <div x-show="showSuccessModal" x-cloak x-transition class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+        <div @click.away="showSuccessModal = false" class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 text-center">
+            <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600">
+                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold mb-2 text-slate-800">Berhasil!</h3>
+            <p class="text-gray-500 text-sm mb-6" x-text="alertMessage"></p>
+            <button 
+                @click="showSuccessModal = false" 
+                class="w-full py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition-colors shadow-sm"
+            >
+                Tutup
+            </button>
+        </div>
+    </div>
+
     <!-- Create Document Modal -->
-    <div x-show="showCreateModal" x-transition class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div x-show="showCreateModal" x-cloak x-transition class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
         <div @click.away="showCreateModal = false" class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
             <h3 class="text-xl font-bold mb-2 text-slate-800" x-text="'Buat ' + (documentType === 'nota' ? 'Nota Dinas' : 'SPPD') + ' Baru'"></h3>
             <p class="text-gray-500 text-sm mb-6">Masukkan nama dokumen untuk melanjutkan</p>
@@ -41,7 +60,7 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div x-show="showDeleteModal" x-transition class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div x-show="showDeleteModal" x-cloak x-transition class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
         <div @click.away="showDeleteModal = false" class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6">
             <div class="text-center">
                 <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
@@ -298,8 +317,20 @@ function dashboardApp() {
         docToDelete: null,
         documentName: '',
         documentType: null,
+        showSuccessModal: false,
+        alertMessage: '',
 
         async init() {
+            // Check for success messages in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('success') === 'sent') {
+                this.alertMessage = 'Dokumen berhasil dikirim ke tujuan!';
+                this.showSuccessModal = true;
+                
+                // Clean up URL without refreshing
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+
             // Check authentication
             const userData = localStorage.getItem('dof_user');
             const token = localStorage.getItem('dof_token');

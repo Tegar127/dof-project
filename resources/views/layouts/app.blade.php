@@ -11,6 +11,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Tinos:wght@400;700&display=swap" rel="stylesheet">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased">
     @yield('content')
