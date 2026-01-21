@@ -30,20 +30,18 @@
             </div>
         </div>
 
-        <!-- Tab Switcher -->
-        <div class="flex p-4 bg-gray-50 border-b gap-2">
-            <button @click="document.type = 'nota'" :class="document.type === 'nota' ? 'tab-active' : 'tab-inactive'" class="flex-1 py-2 px-4 rounded font-bold border transition text-sm">Nota Dinas</button>
-            <button @click="document.type = 'sppd'" :class="document.type === 'sppd' ? 'tab-active' : 'tab-inactive'" class="flex-1 py-2 px-4 rounded font-bold border transition text-sm">Surat Perintah (SPPD)</button>
-        </div>
-
         <!-- Document Type Info -->
-        <div class="px-6 py-3 bg-white border-b">
+        <div class="px-6 py-3 bg-slate-100 border-b">
             <div class="flex items-center justify-between">
                 <div class="w-full">
-                    <label class="text-[10px] uppercase font-bold text-slate-400">Judul Dokumen</label>
-                    <input type="text" x-model="document.title" class="bg-transparent border-none p-0 text-sm font-bold text-slate-800 focus:ring-0 w-full" placeholder="Input Nama Dokumen...">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider" 
+                              :class="document.type === 'nota' ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700'"
+                              x-text="document.type === 'nota' ? 'Nota Dinas' : 'SPPD'"></span>
+                        <div class="text-[10px] px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 font-bold uppercase tracking-wider" x-text="getStatusLabel(document.status)"></div>
+                    </div>
+                    <input type="text" x-model="document.title" class="bg-transparent border-none p-0 text-base font-bold text-slate-800 focus:ring-0 w-full" placeholder="Input Nama Dokumen...">
                 </div>
-                <div class="text-[10px] px-2 py-1 rounded bg-slate-100 text-slate-500 font-bold border border-slate-200" x-text="getStatusLabel(document.status)"></div>
             </div>
         </div>
 

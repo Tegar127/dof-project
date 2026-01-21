@@ -104,26 +104,31 @@
         <!-- Quick Actions & Stats -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
             <template x-if="currentUser?.role === 'user'">
-                <template x-for="i in 3" :key="i">
-                    <button v-if="i === 1" @click="handleCreate('nota')" class="group bg-white p-6 rounded-2xl shadow-xl shadow-slate-200/50 border border-white hover:border-indigo-500/50 transition-all hover:-translate-y-1">
+                <div class="contents">
+                    <!-- Card 1: Nota Dinas -->
+                    <button @click="handleCreate('nota')" class="group bg-white p-6 rounded-2xl shadow-xl shadow-slate-200/50 border border-white hover:border-indigo-500/50 transition-all hover:-translate-y-1 text-left">
                         <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 mb-4 group-hover:scale-110 transition-transform">
                             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                         </div>
                         <h3 class="text-lg font-bold text-slate-800">Nota Dinas Baru</h3>
                         <p class="text-slate-500 text-sm mt-1">Buat draft nota dinas dari template.</p>
                     </button>
-                    <button v-else-if="i === 2" @click="handleCreate('sppd')" class="group bg-white p-6 rounded-2xl shadow-xl shadow-slate-200/50 border border-white hover:border-emerald-500/50 transition-all hover:-translate-y-1">
+
+                    <!-- Card 2: SPPD -->
+                    <button @click="handleCreate('sppd')" class="group bg-white p-6 rounded-2xl shadow-xl shadow-slate-200/50 border border-white hover:border-emerald-500/50 transition-all hover:-translate-y-1 text-left">
                         <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 mb-4 group-hover:scale-110 transition-transform">
                             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                             </svg>
                         </div>
                         <h3 class="text-lg font-bold text-slate-800">SPPD Baru</h3>
                         <p class="text-slate-500 text-sm mt-1">Buat surat perjalanan dinas.</p>
                     </button>
-                    <div v-else class="bg-gradient-to-br from-slate-800 to-slate-900 p-6 rounded-2xl shadow-xl shadow-slate-900/20 text-white flex flex-col justify-center">
+
+                    <!-- Card 3: Stats -->
+                    <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-6 rounded-2xl shadow-xl shadow-slate-900/20 text-white flex flex-col justify-center">
                         <div class="text-slate-400 text-sm font-medium mb-1">Total Dokumen</div>
                         <div class="text-4xl font-bold" x-text="filteredDocs.length"></div>
                         <div class="mt-4 flex gap-2 text-xs">
@@ -131,7 +136,7 @@
                             <span class="bg-white/10 px-2 py-1 rounded-md" x-text="filteredDocs.filter(d => d.status === 'pending_review').length + ' Proses'"></span>
                         </div>
                     </div>
-                </template>
+                </div>
             </template>
 
             <template x-if="currentUser?.role === 'reviewer'">
