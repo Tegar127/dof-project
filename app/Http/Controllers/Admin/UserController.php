@@ -28,7 +28,7 @@ class UserController extends Controller
             'email' => 'required|email|unique:users',
             'password' => 'required|string|min:3',
             'role' => 'required|in:admin,user,reviewer',
-            'group_name' => '​nullable|string',
+            'group_name' => 'nullable|string',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);

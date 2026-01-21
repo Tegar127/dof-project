@@ -9,6 +9,11 @@ window.adminApp = function() {
         userForm: {},
         groupForm: {},
         token: null,
+        notification: {
+            show: false,
+            message: '',
+            type: 'success'
+        },
 
         async init() {
             const userData = localStorage.getItem('dof_user');
@@ -29,6 +34,15 @@ window.adminApp = function() {
             await this.loadGroups();
         },
 
+        showNotification(message, type = 'success') {
+            this.notification.message = message;
+            this.notification.type = type;
+            this.notification.show = true;
+            setTimeout(() => {
+                this.notification.show = false;
+            }, 3000);
+        },
+
         async loadUsers() {
             try {
                 const response = await fetch('/api/users', {
@@ -42,6 +56,7 @@ window.adminApp = function() {
                 }
             } catch (error) {
                 console.error('Error loading users:', error);
+                this.showNotification('Error loading users', 'error');
             }
         },
 
@@ -58,6 +73,7 @@ window.adminApp = function() {
                 }
             } catch (error) {
                 console.error('Error loading groups:', error);
+                this.showNotification('Error loading groups', 'error');
             }
         },
 
@@ -77,9 +93,14 @@ window.adminApp = function() {
                     await this.loadUsers();
                     this.showUserModal = false;
                     this.userForm = {};
+                    this.showNotification('User saved successfully');
+                } else {
+                    const data = await response.json();
+                    this.showNotification(data.message || 'Error saving user', 'error');
                 }
             } catch (error) {
                 console.error('Error saving user:', error);
+                this.showNotification('An unexpected error occurred.', 'error');
             }
         },
 
@@ -97,9 +118,13 @@ window.adminApp = function() {
 
                 if (response.ok) {
                     await this.loadUsers();
+                    alert('User deleted successfully');
+                } else {
+                    this.showNotification('Error deleting user', 'error');
                 }
             } catch (error) {
                 console.error('Error deleting user:', error);
+                this.showNotification('Error deleting user', 'error');
             }
         },
 
@@ -119,9 +144,14 @@ window.adminApp = function() {
                     await this.loadGroups();
                     this.showGroupModal = false;
                     this.groupForm = {};
+                    this.showNotification('Group saved successfully');
+                } else {
+                    const data = await response.json();
+                    this.showNotification(data.message || 'Error saving group', 'error');
                 }
             } catch (error) {
                 console.error('Error saving group:', error);
+                this.showNotification('An unexpected error occurred.', 'error');
             }
         },
 
