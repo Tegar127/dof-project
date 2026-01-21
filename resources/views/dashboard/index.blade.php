@@ -289,6 +289,7 @@
 function dashboardApp() {
     return {
         currentUser: null,
+        token: null,
         documents: [],
         filteredDocs: [],
         searchTerm: '',
@@ -301,12 +302,15 @@ function dashboardApp() {
         async init() {
             // Check authentication
             const userData = localStorage.getItem('dof_user');
-            if (!userData) {
+            const token = localStorage.getItem('dof_token');
+            
+            if (!userData || !token) {
                 window.location.href = '/login';
                 return;
             }
 
             this.currentUser = JSON.parse(userData);
+            this.token = token;
 
             // Redirect admin to admin panel
             if (this.currentUser.role === 'admin') {
@@ -325,7 +329,7 @@ function dashboardApp() {
             try {
                 const response = await fetch('/api/documents', {
                     headers: {
-                        'Authorization': 'Bearer ' + this.currentUser.id,
+                        'Authorization': 'Bearer ' + this.token,
                         'Accept': 'application/json'
                     }
                 });
@@ -385,7 +389,7 @@ function dashboardApp() {
                 const response = await fetch(`/api/documents/${this.docToDelete.id}`, {
                     method: 'DELETE',
                     headers: {
-                        'Authorization': 'Bearer ' + this.currentUser.id,
+                        'Authorization': 'Bearer ' + this.token,
                         'Accept': 'application/json'
                     }
                 });

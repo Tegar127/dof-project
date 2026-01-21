@@ -546,11 +546,25 @@ function editorApp() {
                 alert('Pilih group tujuan!');
                 return;
             }
+            
+            // Set status based on target
+            if (this.document.target_role === 'group') {
+                this.document.status = 'received';
+            } else if (this.document.target_role === 'dispo') {
+                this.document.status = 'pending_review';
+            }
+
             this.showSendModal = false;
-            await this.saveDocument();
+            
+            const success = await this.saveDocument(false); // Pass false to prevent auto-redirect on new doc, we handle it here
+            
+            if (success) {
+                alert('Dokumen berhasil dikirim!');
+                window.location.href = '/dashboard';
+            }
         },
 
-        async saveDocument() {
+        async saveDocument(redirectOnCreate = true) {
             this.saving = true;
             try {
                 const url = this.document.id ? `/api/documents/${this.document.id}` : '/api/documents';
@@ -580,17 +594,25 @@ function editorApp() {
 
                 if (response.ok) {
                     const result = await response.json();
+                    
                     if (!this.document.id && result.id) {
-                        window.location.href = `/editor/${result.id}`;
+                         if (redirectOnCreate) {
+                             window.location.href = `/editor/${result.id}`;
+                             return true;
+                         }
                     } else {
-                        alert('Dokumen berhasil disimpan!');
-                        this.document.id = result.id; // Ensure ID is set
-                        this.documentId = result.id;
+                        if (redirectOnCreate) alert('Dokumen berhasil disimpan!');
                     }
+                    
+                    this.document.id = result.id; // Ensure ID is set
+                    this.documentId = result.id;
+                    return true;
                 }
+                return false;
             } catch (error) {
                 alert('Gagal menyimpan dokumen.');
                 console.error(error);
+                return false;
             } finally {
                 this.saving = false;
             }
