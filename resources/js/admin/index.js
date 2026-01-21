@@ -8,10 +8,13 @@ window.adminApp = function() {
         editingUser: null,
         userForm: {},
         groupForm: {},
+        token: null,
 
         async init() {
             const userData = localStorage.getItem('dof_user');
-            if (!userData) {
+            this.token = localStorage.getItem('dof_token');
+
+            if (!userData || !this.token) {
                 window.location.href = '/login';
                 return;
             }
@@ -29,7 +32,10 @@ window.adminApp = function() {
         async loadUsers() {
             try {
                 const response = await fetch('/api/users', {
-                    headers: { 'Accept': 'application/json' }
+                    headers: { 
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json' 
+                    }
                 });
                 if (response.ok) {
                     this.users = await response.json();
@@ -42,7 +48,10 @@ window.adminApp = function() {
         async loadGroups() {
             try {
                 const response = await fetch('/api/groups', {
-                    headers: { 'Accept': 'application/json' }
+                    headers: { 
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json' 
+                    }
                 });
                 if (response.ok) {
                     this.groups = await response.json();
@@ -57,6 +66,7 @@ window.adminApp = function() {
                 const response = await fetch('/api/users', {
                     method: 'POST',
                     headers: {
+                        'Authorization': 'Bearer ' + this.token,
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
@@ -79,7 +89,10 @@ window.adminApp = function() {
             try {
                 const response = await fetch(`/api/users/${userId}`, {
                     method: 'DELETE',
-                    headers: { 'Accept': 'application/json' }
+                    headers: { 
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json' 
+                    }
                 });
 
                 if (response.ok) {
@@ -95,6 +108,7 @@ window.adminApp = function() {
                 const response = await fetch('/api/groups', {
                     method: 'POST',
                     headers: {
+                        'Authorization': 'Bearer ' + this.token,
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
@@ -122,6 +136,7 @@ window.adminApp = function() {
 
         handleLogout() {
             localStorage.removeItem('dof_user');
+            localStorage.removeItem('dof_token');
             window.location.href = '/login';
         }
     }

@@ -2,9 +2,22 @@ window.editorApp = function() {
     return {
         isEditable() {
             if (!this.currentUser) return false;
-            if (this.currentUser.role === 'admin') return true;
-            if (this.currentUser.role === 'reviewer') return false;
-            return this.document.status === 'draft' || this.document.status === 'needs_revision';
+            
+            // Admin and Reviewer always editable
+            if (this.currentUser.role === 'admin' || this.currentUser.role === 'reviewer') return true;
+            
+            // User (Staff) logic
+            if (this.currentUser.role === 'user') {
+                // If current user is the author (Sender)
+                if (this.document.author_id && this.document.author_id == this.currentUser.id) {
+                     const status = this.document.status;
+                     return status === 'draft' || status === 'needs_revision';
+                }
+                // If not author (Receiver), allow edit
+                return true;
+            }
+            
+            return false;
         },
 
         documentId: null,
@@ -139,7 +152,7 @@ window.editorApp = function() {
             
             // Set status based on target
             if (this.document.target_role === 'group') {
-                this.document.status = 'received';
+                this.document.status = 'sent';
             } else if (this.document.target_role === 'dispo') {
                 this.document.status = 'pending_review';
             }
@@ -267,6 +280,7 @@ window.editorApp = function() {
                 pending_review: 'Review',
                 needs_revision: 'Revisi',
                 approved: 'Approved',
+                sent: 'Dikirim',
                 received: 'Diterima'
             };
             return labels[status] || 'Draft';

@@ -144,10 +144,11 @@ window.dashboardApp = function() {
         getStatusClass(status) {
             const classes = {
                 draft: 'bg-slate-100 text-slate-600',
-                pending_review: 'bg-amber-50 text-amber-600',
-                needs_revision: 'bg-red-50 text-red-600',
-                approved: 'bg-emerald-50 text-emerald-600',
-                received: 'bg-blue-50 text-blue-600'
+                pending_review: 'bg-amber-100 text-amber-700',
+                needs_revision: 'bg-red-100 text-red-700',
+                approved: 'bg-emerald-100 text-emerald-700',
+                sent: 'bg-sky-100 text-sky-700',
+                received: 'bg-violet-100 text-violet-700'
             };
             return classes[status] || classes.draft;
         },
@@ -158,6 +159,7 @@ window.dashboardApp = function() {
                 pending_review: 'Review',
                 needs_revision: 'Revisi',
                 approved: 'Approved',
+                sent: 'Dikirim',
                 received: 'Diterima'
             };
             return labels[status] || 'Draft';

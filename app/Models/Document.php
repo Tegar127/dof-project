@@ -53,7 +53,7 @@ class Document extends Model
               ->orWhere(function ($sq) use ($user) {
                   $sq->where('target_role', 'group')
                      ->where('target_value', $user->group_name)
-                     ->where('status', 'received');
+                     ->whereIn('status', ['sent', 'received']);
               });
         });
     }

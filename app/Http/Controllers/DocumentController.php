@@ -64,6 +64,15 @@ class DocumentController extends Controller
      */
     public function show(Document $document)
     {
+        $user = Auth::user();
+
+        // If opened by receiver group member and status is 'sent', update to 'received'
+        if ($document->status === 'sent' && 
+            $document->target_role === 'group' && 
+            $document->target_value === $user->group_name) {
+            $document->update(['status' => 'received']);
+        }
+
         $document->load('author');
         return response()->json($document);
     }
