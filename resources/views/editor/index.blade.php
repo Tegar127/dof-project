@@ -6,8 +6,8 @@
 <div class="flex flex-col lg:flex-row h-screen overflow-hidden bg-gray-100" x-data="editorApp()" x-init="init()">
     
     <!-- Read Only Modal -->
-    <div x-show="showReadOnlyModal" x-cloak x-transition class="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4">
-        <div @click.away="showReadOnlyModal = false" class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 text-center">
+    <div x-show="showReadOnlyModal" x-cloak class="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4">
+        <div @click.away="showReadOnlyModal = false" class="bg-white rounded-xl shadow-lg max-w-sm w-full p-6 text-center">
             <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600">
                 <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -25,8 +25,8 @@
     </div>
 
     <!-- Send Document Modal -->
-    <div x-show="showSendModal" x-cloak x-transition class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-        <div @click.away="showSendModal = false" class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+    <div x-show="showSendModal" x-cloak class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+        <div @click.away="showSendModal = false" class="bg-white rounded-xl shadow-lg max-w-md w-full p-6">
             <h3 class="text-xl font-bold mb-2 text-slate-800">Kirim Dokumen</h3>
             <p class="text-gray-500 text-sm mb-6">Pilih tujuan pengiriman dokumen ini.</p>
 
@@ -40,7 +40,7 @@
                         </div>
                     </label>
                     
-                    <div x-show="document.target_role === 'group'" x-transition class="pl-8">
+                    <div x-show="document.target_role === 'group'" class="pl-8">
                         <select x-model="document.target_value" class="w-full p-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                             <option value="">-- Pilih Group --</option>
                             <template x-for="group in groups" :key="group">
@@ -79,255 +79,459 @@
         </div>
     </div>
     
+    <style>
+        .form-input-styled {
+            width: 100%;
+            padding: 0.5rem 1rem;
+            background-color: #f8fafc; /* bg-slate-50 */
+            border: 1px solid #e2e8f0; /* border-slate-200 */
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            color: #1e293b; /* text-slate-800 */
+            transition: all 0.2s;
+        }
+        .form-input-styled:focus {
+            background-color: #ffffff;
+            border-color: #6366f1; /* indigo-500 */
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(199, 210, 254, 0.5); /* ring-indigo-200 */
+        }
+        .form-textarea-styled {
+            width: 100%;
+            padding: 0.5rem 1rem;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            color: #1e293b;
+            transition: all 0.2s;
+        }
+        .form-textarea-styled:focus {
+            background-color: #ffffff;
+            border-color: #6366f1;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(199, 210, 254, 0.5);
+        }
+    </style>
     <!-- Left Sidebar: Input Form -->
-    <div class="w-full lg:w-1/3 bg-white flex flex-col border-r border-gray-200 shadow-lg z-10 h-full">
+    <div class="w-full lg:w-[400px] xl:w-[450px] bg-white flex flex-col border-r border-gray-200 shadow-xl z-10 h-full flex-shrink-0 font-sans">
         
         <!-- Toolbar -->
-        <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
-            <a href="/dashboard" class="flex items-center text-slate-600 hover:text-slate-900 text-sm font-medium gap-1">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Dashboard
+        <div class="px-6 py-4 bg-white border-b border-gray-100 flex justify-between items-center sticky top-0 z-20">
+            <a href="/dashboard" class="flex items-center text-slate-500 hover:text-slate-800 text-sm font-medium gap-2 transition-colors">
+                <div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center hover:bg-slate-100 transition-colors">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                </div>
+                <span>Kembali</span>
             </a>
-            <div class="flex gap-2">
+            
+            <div class="flex items-center gap-3">
+                <span x-show="saving" class="text-xs text-slate-400">Menyimpan...</span>
                 <button 
                     @click="saveDocument()" 
                     :disabled="saving || !isEditable()"
-                    class="bg-indigo-600 text-white px-3 py-1.5 rounded text-sm font-bold hover:bg-indigo-700 flex items-center gap-1 disabled:opacity-50"
+                    class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 active:bg-indigo-800 transition-all shadow-sm hover:shadow flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    <svg x-show="!saving" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                     </svg>
-                    <span x-text="saving ? 'Saving...' : 'Simpan'"></span>
+                    <span>Simpan</span>
                 </button>
             </div>
         </div>
 
-        <!-- Document Type Info -->
-        <div class="px-6 py-3 bg-slate-100 border-b">
-            <div class="flex items-center justify-between">
-                <div class="w-full">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider" 
-                              :class="document.type === 'nota' ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700'"
-                              x-text="document.type === 'nota' ? 'Nota Dinas' : 'SPPD'"></span>
-                        <div class="text-[10px] px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 font-bold uppercase tracking-wider" x-text="getStatusLabel(document.status)"></div>
-                    </div>
-                    <input type="text" x-model="document.title" :disabled="!isEditable()" class="bg-transparent border-none p-0 text-base font-bold text-slate-800 focus:ring-0 w-full disabled:text-slate-500" placeholder="Input Nama Dokumen...">
+        <!-- Document Info Header -->
+        <div class="px-6 py-5 bg-slate-50/50 border-b border-gray-100 space-y-3">
+             <div class="flex items-center gap-2">
+                <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border" 
+                      :class="document.type === 'nota' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'"
+                      x-text="document.type === 'nota' ? 'Nota Dinas' : 'SPPD'"></span>
+                
+                <div class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 border border-slate-200" 
+                     x-text="getStatusLabel(document.status)"></div>
+            </div>
+
+            <div class="relative group">
+                <label for="doc-title" class="sr-only">Judul Dokumen</label>
+                <input 
+                    id="doc-title"
+                    type="text" 
+                    x-model="document.title" 
+                    :disabled="!isEditable()" 
+                    class="w-full bg-transparent border-0 border-b-2 border-transparent hover:border-gray-200 focus:border-indigo-500 p-0 py-1 text-lg font-bold text-slate-800 placeholder-slate-300 focus:ring-0 transition-all disabled:text-slate-500" 
+                    placeholder="Judul Dokumen (Klik untuk edit)"
+                >
+                <div class="absolute right-0 top-1/2 -translate-y-1/2 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
                 </div>
             </div>
         </div>
 
-        <!-- Form Fields -->
-        <div class="p-6 overflow-y-auto flex-grow space-y-4">
-            
-            <template x-if="document.status === 'needs_revision' && currentUser?.role === 'user' && document.author_id == currentUser.id">
-                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 shadow-sm mb-2">
-                    <div class="bg-amber-100 p-2 rounded-lg text-amber-600">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                    </div>
-                    <div>
-                        <h4 class="text-sm font-bold text-amber-900">Perlu Revisi</h4>
-                        <p class="text-xs text-amber-800 mt-1 font-medium">Catatan Reviewer:</p>
-                        <p class="text-sm text-amber-900 mt-0.5 italic" x-text="document.feedback || 'Tidak ada catatan.'"></p>
-                    </div>
-                </div>
-            </template>
+        <!-- Scrollable Form Area -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar">
+            <div class="p-6 space-y-6">
 
-            <template x-if="!isEditable() && currentUser?.role === 'user'">
-                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3 shadow-sm mb-2">
-                    <div class="bg-blue-100 p-2 rounded-lg text-blue-600">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <div>
-                        <h4 class="text-sm font-bold text-blue-900">Dokumen Terkunci</h4>
-                        <p class="text-xs text-blue-700 mt-0.5 leading-relaxed">
-                            Status: <span class="font-bold capitalize" x-text="getStatusLabel(document.status)"></span>. 
-                            Konten tidak dapat diubah karena sedang dalam proses review atau sudah disetujui.
-                        </p>
-                    </div>
-                </div>
-            </template>
-
-            <fieldset :disabled="!isEditable()" class="space-y-4 border-none p-0 m-0">
-            
-            <div class="space-y-2">
-                <label class="block text-sm font-medium text-gray-700">Nomor Dokumen</label>
-                <input type="text" x-model="document.content_data.docNumber" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder=".../...">
-            </div>
-
-            <!-- NOTA DINAS FORM -->
-            <template x-if="document.type === 'nota'">
-                <div class="space-y-4">
-                    <div class="grid grid-cols-1 gap-4">
-                        <input type="text" x-model="document.content_data.to" class="w-full p-2 border border-gray-300 rounded" placeholder="Kepada (Yth...)">
-                        <input type="text" x-model="document.content_data.from" class="w-full p-2 border border-gray-300 rounded" placeholder="Dari">
-                        <input type="text" x-model="document.content_data.attachment" class="w-full p-2 border border-gray-300 rounded" placeholder="Lampiran">
-                        <textarea x-model="document.content_data.subject" rows="2" class="w-full p-2 border border-gray-300 rounded" placeholder="Hal / Perihal"></textarea>
-                    </div>
-
-                    <hr class="border-gray-200">
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Berdasarkan (Poin)</label>
-                        <div class="space-y-2">
-                            <template x-for="(item, index) in document.content_data.basis" :key="index">
-                                <div class="flex gap-2">
-                                    <input type="text" x-model="document.content_data.basis[index]" class="w-full p-2 border border-gray-300 rounded" placeholder="Poin...">
-                                    <button @click="removeListItem('basis', index)" class="text-red-500 hover:bg-red-50 px-2 rounded">&times;</button>
-                                </div>
-                            </template>
+                <!-- Notifications / Alerts -->
+                <template x-if="document.status === 'needs_revision' && currentUser?.role === 'user' && document.author_id == currentUser.id">
+                    <div class="bg-amber-50 border border-amber-100 rounded-xl p-4 flex gap-4 shadow-sm">
+                        <div class="text-amber-500 shrink-0">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
                         </div>
-                        <button @click="addListItem('basis')" class="mt-2 text-xs bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded hover:bg-indigo-100 font-medium">+ Tambah Poin</button>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mt-2">Isi Paragraf</label>
-                        <textarea x-model="document.content_data.content" rows="6" class="w-full p-2 border border-gray-300 rounded" placeholder="Sehubungan dengan..."></textarea>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2">
-                        <input type="text" x-model="document.content_data.location" class="w-full p-2 border border-gray-300 rounded" placeholder="Lokasi (Jakarta)">
-                        <input type="date" x-model="document.content_data.date" class="w-full p-2 border border-gray-300 rounded">
-                    </div>
-                    <input type="text" x-model="document.content_data.signerPosition" class="w-full p-2 border border-gray-300 rounded" placeholder="Jabatan">
-                    <input type="text" x-model="document.content_data.division" class="w-full p-2 border border-gray-300 rounded" placeholder="Divisi">
-                    <input type="text" x-model="document.content_data.signerName" class="w-full p-2 border border-gray-300 rounded" placeholder="Nama Penandatangan">
-                </div>
-            </template>
-
-            <!-- SPPD FORM -->
-            <template x-if="document.type === 'sppd'">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Menimbang</label>
-                        <textarea x-model="document.content_data.weigh" rows="3" class="w-full p-2 border border-gray-300 rounded" placeholder="bahwa dalam rangka..."></textarea>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Mengingat (List)</label>
-                        <div class="space-y-2">
-                            <template x-for="(item, index) in document.content_data.remembers" :key="index">
-                                <div class="flex gap-2">
-                                    <input type="text" x-model="document.content_data.remembers[index]" class="w-full p-2 border border-gray-300 rounded" placeholder="Peraturan...">
-                                    <button @click="removeListItem('remembers', index)" class="text-red-500 hover:bg-red-50 px-2 rounded">&times;</button>
-                                </div>
-                            </template>
-                        </div>
-                        <button @click="addListItem('remembers')" class="mt-2 text-xs bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded hover:bg-indigo-100 font-medium">+ Tambah</button>
-                    </div>
-
-                    <hr class="border-gray-200">
-                    <input type="text" x-model="document.content_data.to" class="w-full p-2 border border-gray-300 rounded" placeholder="Kepada (Nama & Jabatan)">
-
-                    <div class="bg-gray-50 p-3 rounded border border-gray-200">
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Detail Perintah (Untuk)</label>
-                        
-                        <label class="text-xs text-gray-500">Poin 1: Kegiatan</label>
-                        <input type="text" x-model="document.content_data.task" class="w-full p-2 border border-gray-300 rounded mb-2" placeholder="Melaksanakan kegiatan...">
-                        
-                        <label class="text-xs text-gray-500">Poin 2: Detail Perjalanan</label>
-                        <div class="grid grid-cols-2 gap-2 mb-2">
-                            <input type="text" x-model="document.content_data.destination" class="p-2 border border-gray-300 rounded" placeholder="Tujuan (Denpasar)">
-                            <input type="text" x-model="document.content_data.transport" class="p-2 border border-gray-300 rounded" placeholder="Pesawat Udara">
-                        </div>
-                        <div class="grid grid-cols-2 gap-2 mb-2">
-                            <div><span class="text-xs">Berangkat</span><input type="date" x-model="document.content_data.dateGo" class="w-full p-2 border border-gray-300 rounded"></div>
-                            <div><span class="text-xs">Kembali</span><input type="date" x-model="document.content_data.dateBack" class="w-full p-2 border border-gray-300 rounded"></div>
-                        </div>
-
-                        <label class="text-xs text-gray-500">Poin 3, 4, 5 (Standar/Edit)</label>
-                        <textarea x-model="document.content_data.funding" rows="2" class="w-full p-2 border border-gray-300 rounded mb-1" placeholder="Biaya dibebankan..."></textarea>
-                        <textarea x-model="document.content_data.report" rows="2" class="w-full p-2 border border-gray-300 rounded mb-1" placeholder="Melaporkan pelaksanaan..."></textarea>
-                        <textarea x-model="document.content_data.closing" rows="1" class="w-full p-2 border border-gray-300 rounded" placeholder="Melaksanakan dengan tanggung jawab."></textarea>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2">
-                        <input type="text" x-model="document.content_data.location" class="w-full p-2 border border-gray-300 rounded" placeholder="Lokasi">
-                        <input type="date" x-model="document.content_data.signDate" class="w-full p-2 border border-gray-300 rounded">
-                    </div>
-                    <input type="text" x-model="document.content_data.signerPosition" class="w-full p-2 border border-gray-300 rounded" placeholder="Jabatan Penandatangan (DIREKTUR UTAMA)">
-                    <input type="text" x-model="document.content_data.signerName" class="w-full p-2 border border-gray-300 rounded" placeholder="Nama Penandatangan">
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Tembusan</label>
-                        <div class="space-y-2">
-                            <template x-for="(item, index) in document.content_data.ccs" :key="index">
-                                <div class="flex gap-2">
-                                    <input type="text" x-model="document.content_data.ccs[index]" class="w-full p-2 border border-gray-300 rounded" placeholder="Direksi...">
-                                    <button @click="removeListItem('ccs', index)" class="text-red-500 hover:bg-red-50 px-2 rounded">&times;</button>
-                                </div>
-                            </template>
-                        </div>
-                        <button @click="addListItem('ccs')" class="mt-2 text-xs bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded hover:bg-indigo-100 font-medium">+ Tambah</button>
-                    </div>
-                </div>
-            </template>
-            </fieldset>
-
-            <!-- Target / Status Section -->
-            <div class="border-t border-gray-200 pt-4 mt-4">
-                 <!-- Reviewer Feedback Section (if reviewer) -->
-                 <template x-if="currentUser?.role === 'reviewer' && document.id">
-                    <div class="space-y-4 mb-6 bg-amber-50 p-4 rounded-lg border border-amber-200">
-                        <h4 class="text-sm font-semibold text-amber-800">Reviewer Actions</h4>
                         <div>
-                            <label class="block text-sm font-medium text-amber-800 mb-2">Feedback</label>
+                            <h4 class="text-sm font-bold text-amber-900">Perlu Revisi</h4>
+                            <p class="text-xs text-amber-700 mt-1 leading-relaxed" x-text="document.feedback || 'Mohon periksa kembali dokumen Anda sesuai arahan.'"></p>
+                        </div>
+                    </div>
+                </template>
+
+                 <template x-if="!isEditable() && currentUser?.role === 'user'">
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex gap-4">
+                        <div class="text-slate-400 shrink-0">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                        </div>
+                         <div>
+                            <h4 class="text-sm font-bold text-slate-700">Mode Baca-Saja</h4>
+                            <p class="text-xs text-slate-500 mt-1">Dokumen sedang diproses. Anda tidak dapat mengedit saat ini.</p>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Main Form Fields -->
+                <fieldset :disabled="!isEditable()" class="space-y-6">
+                    
+                    <!-- Common Field -->
+                    <div class="group">
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 pl-1">Nomor Dokumen</label>
+                        <input type="text" x-model="document.content_data.docNumber" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all placeholder:text-slate-300" placeholder="Contoh: 001/ND/I/2026">
+                    </div>
+
+                    <div class="w-full h-px bg-slate-100 my-6"></div>
+
+                    <!-- NOTA DINAS Fields -->
+                    <template x-if="document.type === 'nota'">
+                        <div class="space-y-6">
+                            
+                            <!-- Section: Header Info -->
+                            <div class="space-y-4">
+                                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                    <span class="w-1 h-4 bg-indigo-500 rounded-full"></span>
+                                    Informasi Surat
+                                </h3>
+                                
+                                <div class="grid gap-4">
+                                    <div class="space-y-1">
+                                        <label class="text-xs text-slate-500 font-medium ml-1">Kepada</label>
+                                        <input type="text" x-model="document.content_data.to" class="form-input-styled" placeholder="Yth. ...">
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-xs text-slate-500 font-medium ml-1">Dari</label>
+                                        <input type="text" x-model="document.content_data.from" class="form-input-styled" placeholder="Nama Pengirim">
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-xs text-slate-500 font-medium ml-1">Lampiran</label>
+                                        <input type="text" x-model="document.content_data.attachment" class="form-input-styled" placeholder="-">
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-xs text-slate-500 font-medium ml-1">Perihal</label>
+                                        <textarea x-model="document.content_data.subject" rows="2" class="form-textarea-styled" placeholder="Isi perihal surat..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                             <!-- Section: Body -->
+                            <div class="space-y-4 pt-2">
+                                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                    <span class="w-1 h-4 bg-indigo-500 rounded-full"></span>
+                                    Isi Dokumen
+                                </h3>
+
+                                <!-- Dynamic List: Basis -->
+                                <div class="space-y-2">
+                                    <label class="text-xs text-slate-500 font-medium ml-1">Dasar / Basis (Poin-poin)</label>
+                                    <div class="space-y-2">
+                                        <template x-for="(item, index) in document.content_data.basis" :key="index">
+                                            <div class="flex gap-2 group">
+                                                <div class="relative w-full">
+                                                     <span class="absolute left-3 top-2.5 text-xs text-slate-400 font-mono" x-text="index + 1 + '.'"></span>
+                                                    <input type="text" x-model="document.content_data.basis[index]" class="form-input-styled pl-8" placeholder="Isi poin...">
+                                                </div>
+                                                <button @click="removeListItem('basis', index)" class="text-slate-300 hover:text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors">
+                                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <button @click="addListItem('basis')" class="w-full py-2 border border-dashed border-indigo-200 text-indigo-600 text-xs font-bold rounded-lg hover:bg-indigo-50 hover:border-indigo-300 transition-all flex items-center justify-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                                        Tambah Poin Dasar
+                                    </button>
+                                </div>
+
+                                <div class="space-y-1">
+                                    <label class="text-xs text-slate-500 font-medium ml-1">Paragraf Isi</label>
+                                    <textarea x-model="document.content_data.content" rows="8" class="form-textarea-styled leading-relaxed" placeholder="Ketik isi surat disini..."></textarea>
+                                </div>
+                            </div>
+                            
+                            <!-- Section: Footer / Signature -->
+                            <div class="space-y-4 pt-2">
+                                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                    <span class="w-1 h-4 bg-indigo-500 rounded-full"></span>
+                                    Penutup & Tanda Tangan
+                                </h3>
+                                
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="space-y-1">
+                                        <label class="text-xs text-slate-500 font-medium ml-1">Lokasi</label>
+                                        <input type="text" x-model="document.content_data.location" class="form-input-styled" placeholder="Jakarta">
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-xs text-slate-500 font-medium ml-1">Tanggal</label>
+                                        <input type="date" x-model="document.content_data.date" class="form-input-styled">
+                                    </div>
+                                </div>
+
+                                <div class="space-y-1">
+                                    <label class="text-xs text-slate-500 font-medium ml-1">Jabatan Penandatangan</label>
+                                    <input type="text" x-model="document.content_data.signerPosition" class="form-input-styled" placeholder="Contoh: KEPALA DIVISI...">
+                                </div>
+                                
+                                <div class="space-y-1">
+                                    <label class="text-xs text-slate-500 font-medium ml-1">Nama Divisi</label>
+                                    <input type="text" x-model="document.content_data.division" class="form-input-styled" placeholder="Contoh: DIVISI TEKNOLOGI...">
+                                </div>
+
+                                <div class="space-y-1">
+                                    <label class="text-xs text-slate-500 font-medium ml-1">Nama Lengkap</label>
+                                    <input type="text" x-model="document.content_data.signerName" class="form-input-styled font-bold" placeholder="Nama Penandatangan">
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- SPPD Fields -->
+                    <template x-if="document.type === 'sppd'">
+                         <div class="space-y-6">
+                            
+                            <!-- Section: Considerations -->
+                            <div class="space-y-4">
+                                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                    <span class="w-1 h-4 bg-emerald-500 rounded-full"></span>
+                                    Dasar Pertimbangan
+                                </h3>
+
+                                <div class="space-y-1">
+                                    <label class="text-xs text-slate-500 font-medium ml-1">Menimbang</label>
+                                    <textarea x-model="document.content_data.weigh" rows="3" class="form-textarea-styled" placeholder="Bahwa dalam rangka..."></textarea>
+                                </div>
+
+                                <!-- Dynamic List: Mengingat -->
+                                <div class="space-y-2">
+                                    <label class="text-xs text-slate-500 font-medium ml-1">Mengingat (Daftar Peraturan)</label>
+                                    <div class="space-y-2">
+                                        <template x-for="(item, index) in document.content_data.remembers" :key="index">
+                                            <div class="flex gap-2 group">
+                                                <div class="relative w-full">
+                                                    <span class="absolute left-3 top-2.5 text-xs text-slate-400 font-mono" x-text="index + 1 + '.'"></span>
+                                                    <input type="text" x-model="document.content_data.remembers[index]" class="form-input-styled pl-8" placeholder="Peraturan...">
+                                                </div>
+                                                <button @click="removeListItem('remembers', index)" class="text-slate-300 hover:text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors">
+                                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <button @click="addListItem('remembers')" class="w-full py-2 border border-dashed border-emerald-200 text-emerald-600 text-xs font-bold rounded-lg hover:bg-emerald-50 hover:border-emerald-300 transition-all flex items-center justify-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                                        Tambah Poin Mengingat
+                                    </button>
+                                </div>
+                            </div>
+
+                             <!-- Section: Assignments -->
+                            <div class="space-y-4 pt-2">
+                                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                    <span class="w-1 h-4 bg-emerald-500 rounded-full"></span>
+                                    Penugasan
+                                </h3>
+                                
+                                <div class="space-y-1">
+                                    <label class="text-xs text-slate-500 font-medium ml-1">Kepada (Penerima Tugas)</label>
+                                    <input type="text" x-model="document.content_data.to" class="form-input-styled" placeholder="Nama & Jabatan">
+                                </div>
+
+                                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                                    <p class="text-xs font-bold text-slate-400 uppercase">Detail Perintah (Untuk)</p>
+                                    
+                                    <div class="space-y-1">
+                                        <label class="text-xs text-slate-500 ml-1">1. Kegiatan Utama</label>
+                                        <input type="text" x-model="document.content_data.task" class="form-input-styled" placeholder="Melaksanakan kegiatan...">
+                                    </div>
+
+                                    <div class="space-y-1">
+                                        <label class="text-xs text-slate-500 ml-1">2. Detail Perjalanan</label>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <input type="text" x-model="document.content_data.destination" class="form-input-styled" placeholder="Tujuan">
+                                            <input type="text" x-model="document.content_data.transport" class="form-input-styled" placeholder="Transportasi">
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-3 mt-2">
+                                            <div class="space-y-1">
+                                                <span class="text-[10px] text-slate-400 ml-1">Tgl Berangkat</span>
+                                                <input type="date" x-model="document.content_data.dateGo" class="form-input-styled">
+                                            </div>
+                                            <div class="space-y-1">
+                                                 <span class="text-[10px] text-slate-400 ml-1">Tgl Kembali</span>
+                                                <input type="date" x-model="document.content_data.dateBack" class="form-input-styled">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-3 pt-2">
+                                        <div class="space-y-1">
+                                            <label class="text-xs text-slate-500 ml-1">3. Pembebanan Biaya</label>
+                                            <textarea x-model="document.content_data.funding" rows="2" class="form-textarea-styled text-sm"></textarea>
+                                        </div>
+                                        <div class="space-y-1">
+                                            <label class="text-xs text-slate-500 ml-1">4. Pelaporan</label>
+                                            <textarea x-model="document.content_data.report" rows="2" class="form-textarea-styled text-sm"></textarea>
+                                        </div>
+                                         <div class="space-y-1">
+                                            <label class="text-xs text-slate-500 ml-1">5. Penutup</label>
+                                            <textarea x-model="document.content_data.closing" rows="2" class="form-textarea-styled text-sm"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                             <!-- Section: Signature & Tembusan -->
+                             <div class="space-y-4 pt-2">
+                                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                    <span class="w-1 h-4 bg-emerald-500 rounded-full"></span>
+                                    Validasi
+                                </h3>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="space-y-1">
+                                        <label class="text-xs text-slate-500 font-medium ml-1">Dikeluarkan di</label>
+                                        <input type="text" x-model="document.content_data.location" class="form-input-styled">
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label class="text-xs text-slate-500 font-medium ml-1">Pada Tanggal</label>
+                                        <input type="date" x-model="document.content_data.signDate" class="form-input-styled">
+                                    </div>
+                                </div>
+
+                                <div class="space-y-1">
+                                    <label class="text-xs text-slate-500 font-medium ml-1">Jabatan (Direksi)</label>
+                                    <input type="text" x-model="document.content_data.signerPosition" class="form-input-styled" placeholder="DIREKTUR...">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs text-slate-500 font-medium ml-1">Nama Penandatangan</label>
+                                    <input type="text" x-model="document.content_data.signerName" class="form-input-styled font-bold">
+                                </div>
+
+                                <!-- Dynamic List: Tembusan -->
+                                <div class="space-y-2 pt-2 border-t border-dashed border-slate-200">
+                                    <label class="text-xs text-slate-500 font-medium ml-1">Tembusan</label>
+                                     <div class="space-y-2">
+                                        <template x-for="(item, index) in document.content_data.ccs" :key="index">
+                                            <div class="flex gap-2 group">
+                                                 <div class="relative w-full">
+                                                    <span class="absolute left-3 top-2.5 text-xs text-slate-400 font-mono" x-text="index + 1 + '.'"></span>
+                                                    <input type="text" x-model="document.content_data.ccs[index]" class="form-input-styled pl-8" placeholder="Nama / Jabatan...">
+                                                </div>
+                                                <button @click="removeListItem('ccs', index)" class="text-slate-300 hover:text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors">
+                                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <button @click="addListItem('ccs')" class="text-xs text-slate-500 hover:text-emerald-600 underline decoration-dashed underline-offset-4 decoration-slate-300 hover:decoration-emerald-400 transition-all">
+                                        + Tambah Tembusan
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                </fieldset>
+            </div>
+            
+            <!-- Bottom Actions -->
+            <div class="p-6 bg-white border-t border-gray-100 pb-20 lg:pb-6">
+                
+                <!-- Reviewer Actions Block -->
+                 <template x-if="currentUser?.role === 'reviewer' && document.id">
+                    <div class="space-y-4 mb-6 bg-amber-50 p-5 rounded-xl border border-amber-100 shadow-sm">
+                        <div class="flex items-center gap-2 text-amber-800 mb-2">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <h4 class="text-sm font-bold">Aksi Reviewer</h4>
+                        </div>
+                        <div>
                             <textarea
                                 x-model="document.feedback"
                                 rows="3"
-                                class="w-full px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                                placeholder="Tulis catatan revisi atau persetujuan..."
+                                class="w-full px-4 py-3 bg-white border border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm placeholder-amber-300"
+                                placeholder="Tulis catatan revisi atau persetujuan disini..."
                             ></textarea>
                         </div>
-                        <div class="flex gap-3">
-                            <button
-                                @click="updateStatus('approved')"
-                                class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-bold"
+                        <div class="grid grid-cols-2 gap-3">
+                             <button
+                                @click="updateStatus('needs_revision')"
+                                class="w-full py-2.5 bg-white text-amber-600 border border-amber-200 rounded-lg hover:bg-amber-50 hover:border-amber-300 transition-all text-sm font-bold shadow-sm"
                             >
-                                Approve
+                                Minta Revisi
                             </button>
                             <button
-                                @click="updateStatus('needs_revision')"
-                                class="flex-1 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm font-bold"
+                                @click="updateStatus('approved')"
+                                class="w-full py-2.5 bg-emerald-600 text-white border border-transparent rounded-lg hover:bg-emerald-700 transition-all text-sm font-bold shadow-sm"
                             >
-                                Request Revision
+                                Setujui (Approve)
                             </button>
                         </div>
                     </div>
                 </template>
 
+                 <!-- User Send Button -->
                 <template x-if="currentUser?.role === 'user' && (document.status === 'draft' || document.status === 'needs_revision')">
-                    <div class="space-y-3">
-                        <button @click="showSendModal = true" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all text-sm flex justify-center items-center gap-2">
+                    <div class="mb-4">
+                        <button 
+                            @click="showSendModal = true" 
+                            class="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 transition-colors flex justify-center items-center gap-2"
+                        >
                             <span>KIRIM DOKUMEN</span>
                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                             </svg>
                         </button>
-                        <p class="text-center text-xs text-slate-400">Dokumen akan dikirim ke Group atau Reviewer.</p>
                     </div>
                 </template>
+
+                <!-- Download Button -->
+                <button 
+                    @click="downloadPDF()" 
+                    class="w-full bg-white text-slate-700 border border-slate-200 py-3 rounded-xl font-bold hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 transition-all flex justify-center items-center gap-2 shadow-sm"
+                >
+                    <svg class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    <span>Download PDF</span>
+                </button>
             </div>
         </div>
 
-        <div class="p-4 bg-white border-t flex flex-col gap-2">
-            <button @click="downloadPDF()" class="w-full bg-blue-600 text-white py-3 rounded font-bold hover:bg-blue-700 shadow flex justify-center items-center gap-2">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                <span>DOWNLOAD PDF</span>
-            </button>
-        </div>
     </div>
 
     <!-- Right Content: Paper Preview -->
-    <div class="w-full lg:w-2/3 bg-gray-500 overflow-y-auto p-8 flex justify-center">
+    <div class="flex-1 bg-slate-200 overflow-y-auto p-8 flex justify-center relative">
         <div id="paperContent" class="paper relative min-h-[297mm]">
             
             <div class="flex items-center mb-2">
