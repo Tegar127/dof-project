@@ -8,12 +8,17 @@ window.editorApp = function() {
             
             // User (Staff) logic
             if (this.currentUser.role === 'user') {
+                const status = this.document.status;
+
+                // Locked statuses for everyone
+                if (status === 'sent' || status === 'approved') return false;
+
                 // If current user is the author (Sender)
                 if (this.document.author_id && this.document.author_id == this.currentUser.id) {
-                     const status = this.document.status;
-                     return status === 'draft' || status === 'needs_revision';
+                     return status === 'draft' || status === 'needs_revision' || status === 'received';
                 }
-                // If not author (Receiver), allow edit
+                
+                // If not author (Receiver) - implicitly 'received' or accessible
                 return true;
             }
             
