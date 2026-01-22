@@ -244,25 +244,6 @@
                                         <div>
                                             <div class="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors" x-text="doc.title"></div>
                                             <div class="text-xs text-slate-500 font-mono mt-0.5" x-text="doc.content_data?.docNumber || doc.data?.docNumber || 'No Ref'"></div>
-                                            
-                                            <!-- Direction Info -->
-                                            <div class="mt-1.5 flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide">
-                                                <template x-if="doc.author_id === currentUser.id">
-                                                    <span class="text-slate-400 flex items-center gap-1">
-                                                        <span>Kepada:</span>
-                                                        <span class="text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded" x-text="doc.target_role === 'dispo' ? 'Reviewer' : (doc.target_value || '-')"></span>
-                                                    </span>
-                                                </template>
-                                                <template x-if="doc.author_id !== currentUser.id">
-                                                    <span class="text-indigo-400 flex items-center gap-1">
-                                                        <span>Dari:</span>
-                                                        <span class="text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
-                                                            <span x-text="doc.author?.name?.split(' ')[0]"></span>
-                                                            <span x-show="doc.author?.group_name" x-text="' (' + doc.author.group_name + ')'"></span>
-                                                        </span>
-                                                    </span>
-                                                </template>
-                                            </div>
                                         </div>
                                     </div>
                                 </td>
@@ -283,6 +264,7 @@
                                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
+<<<<<<< HEAD
                                         <span x-text="getStatusLabel(doc)"></span>
                                         
                                         <!-- Read Receipt for Sender -->
@@ -292,6 +274,9 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4" />
                                             </svg>
                                         </template>
+=======
+                                        <span x-text="getStatusLabel(doc.status)"></span>
+>>>>>>> parent of b27be8a (name)
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-right">
