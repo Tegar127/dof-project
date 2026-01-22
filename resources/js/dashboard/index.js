@@ -153,14 +153,22 @@ window.dashboardApp = function() {
             return classes[status] || classes.draft;
         },
 
-        getStatusLabel(status) {
+        getStatusLabel(doc) {
+            const status = doc.status;
+            const isAuthor = doc.author_id === this.currentUser?.id;
+
+            if (status === 'sent') {
+                return isAuthor ? 'Dikirim' : 'Belum Dibaca';
+            }
+            if (status === 'received') {
+                return isAuthor ? 'Dibaca' : 'Sudah Dibaca';
+            }
+
             const labels = {
                 draft: 'Draft',
                 pending_review: 'Review',
                 needs_revision: 'Revisi',
-                approved: 'Approved',
-                sent: 'Dikirim',
-                received: 'Diterima'
+                approved: 'Approved'
             };
             return labels[status] || 'Draft';
         }
