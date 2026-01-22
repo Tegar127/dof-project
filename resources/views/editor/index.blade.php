@@ -501,13 +501,13 @@
                 </template>
 
                  <!-- User Send Button -->
-                <template x-if="currentUser?.role === 'user' && (document.status === 'draft' || document.status === 'needs_revision')">
+                <template x-if="currentUser?.role === 'user' && (document.status === 'draft' || document.status === 'needs_revision' || document.status === 'received' || document.status === 'sent')">
                     <div class="mb-4">
                         <button 
                             @click="showSendModal = true" 
                             class="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 transition-colors flex justify-center items-center gap-2"
                         >
-                            <span>KIRIM DOKUMEN</span>
+                            <span x-text="(document.status === 'draft' || document.status === 'needs_revision') ? 'KIRIM DOKUMEN' : 'TERUSKAN / BALAS'"></span>
                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                             </svg>
