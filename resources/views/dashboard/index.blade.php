@@ -244,6 +244,7 @@
                                         <div>
                                             <div class="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors" x-text="doc.title"></div>
                                             <div class="text-xs text-slate-500 font-mono mt-0.5" x-text="doc.content_data?.docNumber || doc.data?.docNumber || 'No Ref'"></div>
+<<<<<<< HEAD
                                             
                                             <!-- Sender Info for Receiver -->
                                             <template x-if="doc.author_id !== currentUser?.id">
@@ -254,6 +255,8 @@
                                                     <span x-text="'Dari: ' + (doc.author?.group_name || doc.author_name || 'Unknown')"></span>
                                                 </div>
                                             </template>
+=======
+>>>>>>> parent of b27be8a (name)
                                         </div>
                                     </div>
                                 </td>
