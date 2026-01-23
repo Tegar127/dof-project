@@ -42,8 +42,8 @@ window.dashboardApp = function() {
                 return;
             }
 
-            // Refresh user data
-            this.refreshUserData();
+            // Refresh user data (await to ensure role is up to date)
+            await this.refreshUserData();
 
             // Load documents
             await this.loadDocuments();
@@ -70,6 +70,9 @@ window.dashboardApp = function() {
                     if (this.currentUser.role === 'admin') {
                         window.location.href = '/admin';
                     }
+                } else if (response.status === 401) {
+                    // Token invalid, force logout
+                    this.handleLogout();
                 }
             } catch (error) {
                 console.error('Error refreshing user data:', error);
