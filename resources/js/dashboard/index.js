@@ -42,11 +42,38 @@ window.dashboardApp = function() {
                 return;
             }
 
+            // Refresh user data
+            this.refreshUserData();
+
             // Load documents
             await this.loadDocuments();
 
             // Watch search term
             this.$watch('searchTerm', () => this.filterDocuments());
+        },
+
+        async refreshUserData() {
+            try {
+                const response = await fetch('/api/user', {
+                    headers: {
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    this.currentUser = user;
+                    localStorage.setItem('dof_user', JSON.stringify(user));
+                    
+                    // Re-check admin role
+                    if (this.currentUser.role === 'admin') {
+                        window.location.href = '/admin';
+                    }
+                }
+            } catch (error) {
+                console.error('Error refreshing user data:', error);
+            }
         },
 
         async loadDocuments() {
