@@ -257,7 +257,9 @@ window.editorApp = function() {
                 html2canvas: { 
                     scale: 2, 
                     useCORS: true,
-                    allowTaint: true 
+                    allowTaint: true,
+                    scrollY: 0,
+                    scrollX: 0
                 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };

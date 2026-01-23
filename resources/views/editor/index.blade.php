@@ -532,7 +532,7 @@
 
     <!-- Right Content: Paper Preview -->
     <div class="flex-1 bg-slate-200 overflow-y-auto p-8 flex justify-center relative">
-        <div id="paperContent" class="paper relative min-h-[297mm]">
+        <div id="paperContent" class="paper relative min-h-[297mm]" style="color: #000000 !important; background-color: #ffffff !important;">
             
             <div class="flex items-center mb-2">
                 <!-- Using local asset if available, fallback to provided URL -->
@@ -579,7 +579,7 @@
 
                     <div style="clear: both;"></div>
                     <table class="paraf-box">
-                        <tr><td colspan="2" class="text-center font-bold bg-gray-100">BD-MLI</td></tr>
+                        <tr><td colspan="2" class="text-center font-bold" style="background-color: #f3f4f6;">BD-MLI</td></tr>
                         <tr><td rowspan="2" class="text-center align-middle" width="50%">Paraf</td><td class="text-center">Staff</td></tr>
                         <tr><td class="text-center" height="30"> </td></tr>
                     </table>
