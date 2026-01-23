@@ -296,7 +296,7 @@
                                         >
                                             <span x-text="currentUser?.role === 'reviewer' ? 'Review' : 'Buka'"></span>
                                         </a>
-                                        <template x-if="currentUser?.role === 'user' && doc.author_id === currentUser.id">
+                                        <template x-if="currentUser?.role === 'user'">
                                             <button
                                                 @click="handleDelete(doc.id, doc.title)"
                                                 class="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-white border border-slate-200 text-red-500 hover:text-red-700 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm"
