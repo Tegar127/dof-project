@@ -51,6 +51,7 @@ window.dashboardApp = function () {
             // Load documents
             await this.loadDocuments();
             await this.loadFolders();
+            await this.autoOrganize();
 
             // Watch filters
             this.$watch('searchTerm', () => this.filterDocuments());
@@ -170,23 +171,68 @@ window.dashboardApp = function () {
             }
         },
 
+        async autoOrganize() {
+            // Logic to move documents without folders to their category folders
+            const docsWithoutFolder = this.documents.filter(d => !d.folder_id);
+            for (const doc of docsWithoutFolder) {
+                const folderName = doc.type === 'nota' ? 'Nota Dinas' : 'Surat Perintah (SPPD)';
+                const folder = this.folders.find(f => f.name === folderName);
+                if (folder) {
+                    await fetch(`/api/folders/move/${doc.id}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + this.token,
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ folder_id: folder.id })
+                    });
+                }
+            }
+            if (docsWithoutFolder.length > 0) {
+                await this.loadDocuments();
+                await this.loadFolders();
+            }
+        },
+
         handleCreate(type) {
             this.documentType = type;
             this.showCreateModal = true;
         },
 
-        confirmCreate() {
+        async confirmCreate() {
             if (!this.documentName.trim()) {
                 alert('Nama dokumen tidak boleh kosong!');
                 return;
             }
 
-            localStorage.setItem('dof_new_doc', JSON.stringify({
-                type: this.documentType,
-                name: this.documentName
-            }));
+            // Create document in backend immediately (Single Source of Truth)
+            try {
+                const response = await fetch('/api/documents', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: this.documentName,
+                        type: this.documentType,
+                        status: 'draft'
+                    })
+                });
 
-            window.location.href = '/editor/new';
+                if (response.ok) {
+                    const result = await response.json();
+                    window.location.href = `/editor/${result.id}`;
+                } else {
+                    console.error('Failed to create document', await response.text());
+                    alert('Gagal membuat dokumen. Silakan coba lagi.');
+                }
+            } catch (error) {
+                console.error('Error creating document:', error);
+                alert('Terjadi kesalahan koneksi.');
+            }
         },
 
         handleDelete(docId, docTitle) {
@@ -242,7 +288,7 @@ window.dashboardApp = function () {
         },
 
         getStatusLabel(doc) {
-            const status = doc.status;
+            const status = typeof doc.status === 'object' ? doc.status.value : doc.status;
             const isAuthor = doc.author_id === this.currentUser?.id;
 
             if (status === 'sent') {

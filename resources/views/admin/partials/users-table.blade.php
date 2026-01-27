@@ -21,6 +21,7 @@
                 <tr class="bg-slate-50/50 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                     <th class="px-6 py-4">User Info</th>
                     <th class="px-6 py-4">Role</th>
+                    <th class="px-6 py-4">Position</th>
                     <th class="px-6 py-4">Group</th>
                     <th class="px-6 py-4 text-right">Actions</th>
                 </tr>
@@ -41,6 +42,10 @@
                             <span :class="getRoleBadge(user.role)" class="px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wide">
                                 <span x-text="user.role"></span>
                             </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span x-show="user.position" class="text-xs font-semibold uppercase tracking-wider text-slate-600 bg-slate-100 px-2 py-1 rounded" x-text="user.position"></span>
+                            <span x-show="!user.position" class="text-xs text-slate-400">-</span>
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-2" x-show="user.group_name">

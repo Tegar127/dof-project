@@ -125,8 +125,6 @@
             <div class="flex items-center gap-3 mb-6">
                 <div class="h-8 w-1.5 bg-indigo-500 rounded-full"></div>
                 <h2 class="text-white font-bold text-xl tracking-tight">Buat Dokumen Baru</h2>
-                <!-- Debug Role (temporary, can be removed later) -->
-                <!-- <span class="text-xs text-white/30 font-mono" x-text="'(Role: ' + (currentUser?.role || '-') + ')'"></span> -->
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- User Cards -->

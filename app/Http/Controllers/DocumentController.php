@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\DocumentStatus;
 use App\Models\Document;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -49,7 +50,7 @@ class DocumentController extends Controller
         $document = Document::create([
             'title' => $validated['title'],
             'type' => $validated['type'],
-            'status' => $validated['status'] ?? 'draft',
+            'status' => $validated['status'] ?? DocumentStatus::DRAFT,
             'author_id' => $user->id,
             'author_name' => $user->name,
             'content_data' => $validated['content_data'] ?? [],
@@ -95,12 +96,12 @@ class DocumentController extends Controller
         $document->markAsRead($user);
 
         // If opened by receiver group member and status is 'sent', update to 'received'
-        if ($document->status === 'sent' && 
+        if ($document->status === DocumentStatus::SENT && 
             $document->target_role === 'group' && 
             $document->target_value === $user->group_name) {
             $oldStatus = $document->status;
-            $document->update(['status' => 'received']);
-            $document->createLog('received', $user, 'Dokumen diterima oleh ' . $user->group_name, $oldStatus, 'received');
+            $document->update(['status' => DocumentStatus::RECEIVED]);
+            $document->createLog('received', $user, 'Dokumen diterima oleh ' . $user->group_name, $oldStatus, DocumentStatus::RECEIVED);
         }
 
         $document->load(['author', 'logs', 'approvals.approver', 'readReceipts.user', 'folder']);
@@ -158,6 +159,18 @@ class DocumentController extends Controller
 
         $document->update($updateData);
 
+        // Update approvals if provided
+        if ($request->has('approvals')) {
+            $document->approvals()->delete();
+            foreach ($request->input('approvals') as $index => $approvalData) {
+                $document->approvals()->create([
+                    'sequence' => $index + 1,
+                    'approver_position' => $approvalData['approver_position'] ?? null,
+                    'status' => $approvalData['status'] ?? 'pending',
+                ]);
+            }
+        }
+
         // Increment version if requested
         if (isset($validated['increment_version']) && $validated['increment_version']) {
             $document->incrementVersion();
@@ -167,23 +180,28 @@ class DocumentController extends Controller
         $action = 'updated';
         $notes = 'Dokumen diperbarui';
         
-        $statusChanged = isset($validated['status']) && $validated['status'] !== $oldStatus;
+        $statusChanged = isset($validated['status']) && $validated['status'] !== $oldStatus->value;
         $targetChanged = isset($validated['target']);
 
         if ($statusChanged || $targetChanged) {
-            if (isset($validated['status']) && $validated['status'] === 'sent') {
-                if ($oldStatus === 'draft' || $oldStatus === 'needs_revision') {
+            if (isset($validated['status']) && $validated['status'] === DocumentStatus::SENT->value) {
+                if ($oldStatus === DocumentStatus::DRAFT || $oldStatus === DocumentStatus::NEEDS_REVISION) {
                     $action = 'sent';
                     $notes = 'Dokumen dikirim ke ' . ($validated['target']['value'] ?? $document->target_value);
+                    
+                    // Increment version if resending after revision
+                    if ($oldStatus === DocumentStatus::NEEDS_REVISION) {
+                        $document->incrementVersion();
+                    }
                 } else {
                     $action = 'sent';
                     $notes = 'Dokumen diteruskan ke ' . ($validated['target']['value'] ?? $document->target_value);
                 }
             } else if ($statusChanged) {
-                $action = $validated['status'] === 'pending_review' ? 'sent' : $validated['status'];
+                $action = $validated['status'] === DocumentStatus::PENDING_REVIEW->value ? 'sent' : $validated['status'];
                 $notes = $this->getStatusChangeNote($validated['status']);
                 
-                if ($validated['status'] === 'pending_review') {
+                if ($validated['status'] === DocumentStatus::PENDING_REVIEW->value) {
                     $notes = 'Dokumen dikirim untuk review';
                 }
             } else if ($targetChanged) {
@@ -206,16 +224,18 @@ class DocumentController extends Controller
      */
     private function getStatusChangeNote($status)
     {
+        $statusValue = $status instanceof DocumentStatus ? $status->value : $status;
+
         $notes = [
-            'draft' => 'Dokumen disimpan sebagai draft',
-            'pending_review' => 'Dokumen dikirim untuk review',
-            'needs_revision' => 'Dokumen memerlukan revisi',
-            'approved' => 'Dokumen disetujui',
-            'sent' => 'Dokumen dikirim',
-            'received' => 'Dokumen diterima',
+            DocumentStatus::DRAFT->value => 'Dokumen disimpan sebagai draft',
+            DocumentStatus::PENDING_REVIEW->value => 'Dokumen dikirim untuk review',
+            DocumentStatus::NEEDS_REVISION->value => 'Dokumen memerlukan revisi',
+            DocumentStatus::APPROVED->value => 'Dokumen disetujui',
+            DocumentStatus::SENT->value => 'Dokumen dikirim',
+            DocumentStatus::RECEIVED->value => 'Dokumen diterima',
         ];
         
-        return $notes[$status] ?? 'Status dokumen diubah';
+        return $notes[$statusValue] ?? 'Status dokumen diubah';
     }
 
     /**

@@ -48,6 +48,7 @@ window.editorApp = function () {
             target_value: '',
             feedback: '',
             deadline: null,
+            approvals: [],
             content_data: {
                 // Shared
                 docNumber: '',
@@ -90,19 +91,8 @@ window.editorApp = function () {
                 await this.loadDocument();
                 await this.loadLogs();
             } else {
-                const newDocData = localStorage.getItem('dof_new_doc');
-                if (newDocData) {
-                    const data = JSON.parse(newDocData);
-                    this.document.type = data.type;
-                    this.document.title = data.name;
-                    localStorage.removeItem('dof_new_doc');
-                }
-                // Set default dates for new doc
-                const today = new Date().toISOString().split('T')[0];
-                this.document.content_data.date = today;
-                this.document.content_data.signDate = today;
-                this.document.content_data.dateGo = today;
-                this.document.content_data.dateBack = today;
+                // 'new' is no longer supported directly, must create via dashboard
+                window.location.href = '/dashboard';
             }
         },
 
@@ -214,6 +204,7 @@ window.editorApp = function () {
                     status: this.document.status,
                     content_data: this.document.content_data,
                     deadline: this.document.deadline || null,
+                    approvals: this.document.approvals,
                     target: {
                         type: this.document.target_role,
                         value: this.document.target_value

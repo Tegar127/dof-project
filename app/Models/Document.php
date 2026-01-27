@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DocumentStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -29,6 +30,7 @@ class Document extends Model
     protected function casts(): array
     {
         return [
+            'status' => DocumentStatus::class,
             'content_data' => 'array',
             'history_log' => 'array',
             'deadline' => 'datetime',
@@ -50,7 +52,7 @@ class Document extends Model
     {
         if ($user->role === 'reviewer') {
             return $query->where('target_role', 'dispo')
-                         ->whereIn('status', ['pending_review', 'approved']);
+                         ->whereIn('status', [DocumentStatus::PENDING_REVIEW, DocumentStatus::APPROVED]);
         }
 
         return $query->where(function ($q) use ($user) {
@@ -58,7 +60,7 @@ class Document extends Model
               ->orWhere(function ($sq) use ($user) {
                   $sq->where('target_role', 'group')
                      ->where('target_value', $user->group_name)
-                     ->whereIn('status', ['sent', 'received']);
+                     ->whereIn('status', [DocumentStatus::SENT, DocumentStatus::RECEIVED]);
               });
         });
     }

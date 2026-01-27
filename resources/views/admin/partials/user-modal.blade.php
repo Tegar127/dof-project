@@ -47,6 +47,18 @@
                         </div>
                     </div>
 
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Position (Jabatan)</label>
+                        <select x-model="userForm.position" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
+                            <option value="">Select Position</option>
+                            <option value="direksi">Direksi</option>
+                            <option value="kadiv">Kepala Divisi (KADIV)</option>
+                            <option value="kabid">Kepala Bidang (KABID)</option>
+                            <option value="staff">Staff</option>
+                        </select>
+                        <p class="text-xs text-slate-500 mt-1">Required for approval hierarchy (Urutan: Direksi > Kadiv > Kabid > Staff)</p>
+                    </div>
+
                     <div class="flex gap-3 pt-4 mt-6 border-t border-slate-100">
                         <button type="button" @click="showUserModal = false" class="flex-1 px-4 py-2.5 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors">
                             Cancel

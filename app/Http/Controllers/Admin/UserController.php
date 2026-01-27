@@ -29,6 +29,7 @@ class UserController extends Controller
             'password' => 'required|string|min:3',
             'role' => 'required|in:admin,user,reviewer',
             'group_name' => 'nullable|string',
+            'position' => 'nullable|in:direksi,kadiv,kabid,staff',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
@@ -60,6 +61,7 @@ class UserController extends Controller
             'password' => 'sometimes|string|min:3',
             'role' => 'sometimes|in:admin,user,reviewer',
             'group_name' => 'nullable|string',
+            'position' => 'nullable|in:direksi,kadiv,kabid,staff',
         ]);
 
         if (isset($validated['password'])) {

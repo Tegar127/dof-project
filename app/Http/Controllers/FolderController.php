@@ -14,12 +14,30 @@ class FolderController extends Controller
      */
     public function index()
     {
-        $folders = Folder::with(['children', 'documents'])
-            ->whereNull('parent_id')
-            ->orderBy('order')
+        $user = Auth::user();
+        
+        // Sync folders based on existing documents if needed
+        $this->syncDynamicFolders($user);
+
+        $folders = Folder::withCount('documents')
+            ->orderBy('name')
             ->get();
         
         return response()->json($folders);
+    }
+
+    private function syncDynamicFolders($user)
+    {
+        // Get all unique categories (types) from documents
+        $types = Document::forUser($user)->distinct()->pluck('type');
+        
+        foreach ($types as $type) {
+            $folderName = ($type === 'nota' ? 'Nota Dinas' : 'Surat Perintah (SPPD)');
+            Folder::firstOrCreate(
+                ['name' => $folderName],
+                ['type' => 'category']
+            );
+        }
     }
 
     /**

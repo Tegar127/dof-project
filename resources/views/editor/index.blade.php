@@ -151,6 +151,9 @@
                 
                 <div class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 border border-slate-200" 
                      x-text="getStatusLabel(document.status)"></div>
+
+                <div class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-600 border border-blue-100" 
+                     x-text="'v' + (document.version || '1.0')"></div>
             </div>
 
             <div class="relative group">
@@ -499,7 +502,10 @@
                             
                             <div class="flex flex-col">
                                 <div class="flex items-center justify-between gap-2">
-                                    <span class="text-xs font-bold text-slate-800" x-text="log.notes || log.action"></span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 border border-slate-200" x-text="'v'+log.version"></span>
+                                        <span class="text-xs font-bold text-slate-800" x-text="log.notes || log.action"></span>
+                                    </div>
                                     <span class="text-[10px] text-slate-400 whitespace-nowrap" x-text="new Date(log.created_at).toLocaleDateString('id-ID', {day:'2-digit', month:'short'})"></span>
                                 </div>
                                 <div class="text-[10px] text-slate-500 mt-0.5">
@@ -572,7 +578,43 @@
                     </div>
                 </template>
 
-                 <!-- User Send Button -->
+                 <!-- Paraf Dinamis Setting -->
+                <template x-if="currentUser?.role === 'user' && (document.status === 'draft' || document.status === 'needs_revision')">
+                    <div class="mb-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-2 text-slate-800">
+                                <svg class="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                                <h4 class="text-sm font-bold">Paraf Berjenjang</h4>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest" x-text="document.approvals?.length + ' PARAF'"></span>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <template x-for="(aprv, index) in document.approvals" :key="index">
+                                <div class="flex gap-2 items-center bg-slate-50 p-2 rounded-lg border border-slate-100">
+                                    <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold" x-text="index + 1"></div>
+                                    <select x-model="aprv.approver_position" class="flex-1 text-xs p-1.5 bg-white border border-slate-200 rounded">
+                                        <option value="staff">Staff</option>
+                                        <option value="kabid">Kabid</option>
+                                        <option value="kadiv">Kadiv</option>
+                                        <option value="direksi">Direksi</option>
+                                    </select>
+                                    <button @click="document.approvals.splice(index, 1)" class="text-slate-300 hover:text-red-500 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                </div>
+                            </template>
+                            
+                            <button @click="document.approvals.push({sequence: document.approvals.length + 1, approver_position: 'kabid', status: 'pending'})" class="w-full py-2 border border-dashed border-slate-300 text-slate-500 text-[10px] font-bold rounded-lg hover:bg-slate-50 transition-all">
+                                + TAMBAH JENJANG PARAF
+                            </button>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- User Send Button -->
                 <template x-if="currentUser?.role === 'user' && (document.status === 'draft' || document.status === 'needs_revision')">
                     <div class="mb-4">
                         <button 

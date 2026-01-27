@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\DocumentStatus;
 use App\Models\Document;
 use App\Models\DocumentApproval;
 use Illuminate\Http\Request;
@@ -78,10 +79,10 @@ class DocumentApprovalController extends Controller
         // Check if all approvals are completed
         $allApproved = !$document->approvals()->where('status', 'pending')->exists();
         
-        if ($allApproved && $document->status === 'pending_review') {
+        if ($allApproved && $document->status === DocumentStatus::PENDING_REVIEW) {
             $oldStatus = $document->status;
-            $document->update(['status' => 'approved']);
-            $document->createLog('updated', $user, 'Semua approval selesai', $oldStatus, 'approved');
+            $document->update(['status' => DocumentStatus::APPROVED]);
+            $document->createLog('updated', $user, 'Semua approval selesai', $oldStatus, DocumentStatus::APPROVED);
         }
 
         return response()->json([
@@ -132,10 +133,10 @@ class DocumentApprovalController extends Controller
 
         // Update document status
         $oldStatus = $document->status;
-        $document->update(['status' => 'needs_revision']);
+        $document->update(['status' => DocumentStatus::NEEDS_REVISION]);
         
         // Create log entry
-        $document->createLog('rejected', $user, $validated['notes'], $oldStatus, 'needs_revision');
+        $document->createLog('rejected', $user, $validated['notes'], $oldStatus, DocumentStatus::NEEDS_REVISION);
 
         return response()->json([
             'success' => true,
