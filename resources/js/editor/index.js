@@ -15,6 +15,9 @@ window.editorApp = function () {
 
             // User (Staff) logic
             if (this.currentUser.role === 'user') {
+                // If document is approved, it's locked for everyone (except maybe admin, handled above)
+                if (this.document.status === 'approved') return false;
+
                 // If current user is the author (Sender)
                 if (this.document.author_id && this.document.author_id == this.currentUser.id) {
                     const status = this.document.status;
@@ -23,8 +26,6 @@ window.editorApp = function () {
                 }
                 
                 // If not author (Receiver), allow edit/forward
-                // But only if it's not already approved or in review?
-                // For now, allow receivers to edit so they can revise before forwarding
                 return true;
             }
 
@@ -37,6 +38,12 @@ window.editorApp = function () {
         saving: false,
         showSendModal: false,
         showReadOnlyModal: false,
+        showSuccessModal: false,
+        showConfirmModal: false,
+        alertMessage: '',
+        confirmTitle: '',
+        confirmMessage: '',
+        confirmCallback: null,
         groups: [],
         logs: [],
         loadingLogs: false,
@@ -133,6 +140,12 @@ window.editorApp = function () {
                 });
                 if (response.ok) {
                     const doc = await response.json();
+                    
+                    // Normalize status if it's an object (Enum)
+                    if (doc.status && typeof doc.status === 'object' && doc.status.value) {
+                        doc.status = doc.status.value;
+                    }
+
                     this.document = doc;
 
                     // Show read-only notice if user is staff and document is locked
@@ -166,11 +179,13 @@ window.editorApp = function () {
 
         async confirmSend() {
             if (!this.document.target_role) {
-                alert('Pilih tujuan pengiriman!');
+                this.alertMessage = 'Pilih tujuan pengiriman!';
+                this.showSuccessModal = true;
                 return;
             }
             if (this.document.target_role === 'group' && !this.document.target_value) {
-                alert('Pilih group tujuan!');
+                this.alertMessage = 'Pilih group tujuan!';
+                this.showSuccessModal = true;
                 return;
             }
 
@@ -189,6 +204,24 @@ window.editorApp = function () {
             if (success) {
                 window.location.href = '/dashboard?success=sent';
             }
+        },
+
+        async finishDocument() {
+            this.confirmTitle = 'Selesaikan Dokumen?';
+            this.confirmMessage = 'Apakah Anda yakin ingin menyelesaikan dokumen ini? Dokumen tidak dapat diedit atau diteruskan lagi.';
+            this.confirmCallback = async () => {
+                this.showConfirmModal = false;
+                this.document.status = 'approved';
+                
+                const success = await this.saveDocument(false, true);
+
+                if (success) {
+                    this.alertMessage = 'Dokumen berhasil diselesaikan (ACC).';
+                    this.showSuccessModal = true;
+                    setTimeout(() => window.location.reload(), 1500);
+                }
+            };
+            this.showConfirmModal = true;
         },
 
         async saveDocument(redirectOnCreate = true, force = false) {
@@ -234,7 +267,10 @@ window.editorApp = function () {
                             return true;
                         }
                     } else {
-                        if (redirectOnCreate) alert('Dokumen berhasil disimpan!');
+                        if (redirectOnCreate) {
+                            this.alertMessage = 'Dokumen berhasil disimpan!';
+                            this.showSuccessModal = true;
+                        }
                     }
 
                     this.document = result.document || this.document; // Update local state if returned
@@ -247,7 +283,8 @@ window.editorApp = function () {
                 }
                 return false;
             } catch (error) {
-                alert('Gagal menyimpan dokumen.');
+                this.alertMessage = 'Gagal menyimpan dokumen.';
+                this.showSuccessModal = true;
                 console.error(error);
                 return false;
             } finally {
@@ -270,8 +307,9 @@ window.editorApp = function () {
                     })
                 });
                 if (response.ok) {
-                    alert('Status berhasil diperbarui!');
-                    window.location.href = '/dashboard';
+                    this.alertMessage = 'Status berhasil diperbarui!';
+                    this.showSuccessModal = true;
+                    setTimeout(() => window.location.href = '/dashboard', 1000);
                 }
             } catch (e) { console.error(e); }
         },
@@ -298,7 +336,8 @@ window.editorApp = function () {
             if (window.html2pdf) {
                 window.html2pdf().set(opt).from(element).save();
             } else {
-                alert('HTML2PDF library not loaded.');
+                this.alertMessage = 'HTML2PDF library not loaded.';
+                this.showSuccessModal = true;
             }
         },
 

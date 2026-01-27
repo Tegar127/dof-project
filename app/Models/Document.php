@@ -61,6 +61,9 @@ class Document extends Model
                   $sq->where('target_role', 'group')
                      ->where('target_value', $user->group_name)
                      ->whereIn('status', [DocumentStatus::SENT, DocumentStatus::RECEIVED]);
+              })
+              ->orWhereHas('logs', function ($lq) use ($user) {
+                  $lq->where('user_id', $user->id);
               });
         });
     }

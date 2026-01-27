@@ -24,6 +24,52 @@
         </div>
     </div>
 
+    <!-- Generic Success/Alert Modal -->
+    <div x-show="showSuccessModal" x-cloak class="fixed inset-0 z-[70] bg-black/50 flex items-center justify-center p-4">
+        <div @click.away="showSuccessModal = false" class="bg-white rounded-xl shadow-lg max-w-sm w-full p-6 text-center">
+            <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600">
+                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold mb-2 text-slate-800">Berhasil!</h3>
+            <p class="text-gray-500 text-sm mb-6" x-text="alertMessage"></p>
+            <button 
+                @click="showSuccessModal = false" 
+                class="w-full py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition-colors shadow-sm"
+            >
+                Tutup
+            </button>
+        </div>
+    </div>
+
+    <!-- Generic Confirmation Modal -->
+    <div x-show="showConfirmModal" x-cloak class="fixed inset-0 z-[70] bg-black/50 flex items-center justify-center p-4">
+        <div @click.away="showConfirmModal = false" class="bg-white rounded-xl shadow-lg max-w-sm w-full p-6 text-center">
+            <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600">
+                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold mb-2 text-slate-800" x-text="confirmTitle || 'Konfirmasi'"></h3>
+            <p class="text-gray-500 text-sm mb-6" x-text="confirmMessage"></p>
+            <div class="flex gap-3">
+                <button 
+                    @click="showConfirmModal = false" 
+                    class="flex-1 py-2.5 text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+                >
+                    Batal
+                </button>
+                <button 
+                    @click="confirmCallback()" 
+                    class="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors shadow-sm"
+                >
+                    Ya, Lanjutkan
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Send Document Modal -->
     <div x-show="showSendModal" x-cloak class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
         <div @click.away="showSendModal = false" class="bg-white rounded-xl shadow-lg max-w-md w-full p-6">
@@ -579,19 +625,34 @@
                     </div>
                 </template>
 
-                <!-- Forward Button for Received Documents -->
-                <template x-if="currentUser?.role === 'user' && (document.status === 'received' || document.status === 'sent') && document.author_id !== currentUser.id">
-                    <div class="mb-4">
-                        <button 
-                            @click="showSendModal = true" 
-                            class="w-full bg-emerald-600 text-white py-3 rounded-lg font-bold hover:bg-emerald-700 transition-colors flex justify-center items-center gap-2"
-                        >
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span>TERUSKAN DOKUMEN</span>
-                        </button>
-                        <p class="text-xs text-slate-500 text-center mt-2">Kirim dokumen ini ke group/divisi lain</p>
+                <!-- Forward Button for Received/Sent Documents (Re-route) -->
+                <template x-if="currentUser?.role === 'user' && (document.status === 'received' || document.status === 'sent')">
+                    <div>
+                        <div class="mb-4">
+                            <button 
+                                @click="showSendModal = true" 
+                                class="w-full bg-emerald-600 text-white py-3 rounded-lg font-bold hover:bg-emerald-700 transition-colors flex justify-center items-center gap-2"
+                            >
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>TERUSKAN DOKUMEN</span>
+                            </button>
+                            <p class="text-xs text-slate-500 text-center mt-2">Kirim dokumen ini ke group/divisi lain</p>
+                        </div>
+
+                        <div class="mb-4">
+                            <button 
+                                @click="finishDocument()" 
+                                class="w-full bg-slate-800 text-white py-3 rounded-lg font-bold hover:bg-slate-900 transition-colors flex justify-center items-center gap-2"
+                            >
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>SELESAI / ACC</span>
+                            </button>
+                            <p class="text-xs text-slate-500 text-center mt-2">Tandai dokumen selesai (tidak bisa diedit lagi)</p>
+                        </div>
                     </div>
                 </template>
 
