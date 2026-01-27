@@ -36,6 +36,12 @@ class DocumentController extends Controller
             'content_data' => 'sometimes|array',
             'history_log' => 'sometimes|array',
             'target' => 'sometimes|array',
+            'folder_id' => 'nullable|exists:folders,id',
+            'deadline' => 'nullable|date',
+            'approval_count' => 'nullable|integer|min:0|max:10',
+            'approvals' => 'nullable|array',
+            'approvals.*.position' => 'nullable|in:direksi,kadiv,kabid,staff',
+            'approvals.*.approver_id' => 'nullable|exists:users,id',
         ]);
 
         $user = Auth::user();
@@ -50,12 +56,31 @@ class DocumentController extends Controller
             'history_log' => $validated['history_log'] ?? [],
             'target_role' => $validated['target']['type'] ?? null,
             'target_value' => $validated['target']['value'] ?? null,
+            'folder_id' => $validated['folder_id'] ?? null,
+            'version' => '1.0',
+            'deadline' => $validated['deadline'] ?? null,
+            'approval_count' => $validated['approval_count'] ?? 0,
         ]);
+
+        // Create initial log entry
+        $document->createLog('created', $user, 'Dokumen dibuat');
+
+        // Create approval records if specified
+        if (isset($validated['approvals']) && count($validated['approvals']) > 0) {
+            foreach ($validated['approvals'] as $index => $approvalData) {
+                $document->approvals()->create([
+                    'sequence' => $index + 1,
+                    'approver_position' => $approvalData['position'] ?? null,
+                    'approver_id' => $approvalData['approver_id'] ?? null,
+                    'status' => 'pending',
+                ]);
+            }
+        }
 
         return response()->json([
             'success' => true,
             'id' => $document->id,
-            'document' => $document,
+            'document' => $document->load(['logs', 'approvals']),
         ], 201);
     }
 
@@ -66,14 +91,19 @@ class DocumentController extends Controller
     {
         $user = Auth::user();
 
+        // Mark document as read
+        $document->markAsRead($user);
+
         // If opened by receiver group member and status is 'sent', update to 'received'
         if ($document->status === 'sent' && 
             $document->target_role === 'group' && 
             $document->target_value === $user->group_name) {
+            $oldStatus = $document->status;
             $document->update(['status' => 'received']);
+            $document->createLog('received', $user, 'Dokumen diterima oleh ' . $user->group_name, $oldStatus, 'received');
         }
 
-        $document->load('author');
+        $document->load(['author', 'logs', 'approvals.approver', 'readReceipts.user', 'folder']);
         return response()->json($document);
     }
 
@@ -88,9 +118,14 @@ class DocumentController extends Controller
             'history_log' => 'sometimes|array',
             'feedback' => 'sometimes|string|nullable',
             'target' => 'sometimes|array',
+            'folder_id' => 'nullable|exists:folders,id',
+            'deadline' => 'nullable|date',
+            'increment_version' => 'sometimes|boolean',
         ]);
 
+        $user = Auth::user();
         $updateData = [];
+        $oldStatus = $document->status;
 
         if (isset($validated['status'])) {
             $updateData['status'] = $validated['status'];
@@ -113,12 +148,85 @@ class DocumentController extends Controller
             $updateData['target_value'] = $validated['target']['value'];
         }
 
+        if (isset($validated['folder_id'])) {
+            $updateData['folder_id'] = $validated['folder_id'];
+        }
+
+        if (isset($validated['deadline'])) {
+            $updateData['deadline'] = $validated['deadline'];
+        }
+
         $document->update($updateData);
+
+        // Increment version if requested
+        if (isset($validated['increment_version']) && $validated['increment_version']) {
+            $document->incrementVersion();
+        }
+
+        // Determine action for logging
+        $action = 'updated';
+        $notes = 'Dokumen diperbarui';
+        
+        $statusChanged = isset($validated['status']) && $validated['status'] !== $oldStatus;
+        $targetChanged = isset($validated['target']);
+
+        if ($statusChanged || $targetChanged) {
+            if (isset($validated['status']) && $validated['status'] === 'sent') {
+                if ($oldStatus === 'draft' || $oldStatus === 'needs_revision') {
+                    $action = 'sent';
+                    $notes = 'Dokumen dikirim ke ' . ($validated['target']['value'] ?? $document->target_value);
+                } else {
+                    $action = 'sent';
+                    $notes = 'Dokumen diteruskan ke ' . ($validated['target']['value'] ?? $document->target_value);
+                }
+            } else if ($statusChanged) {
+                $action = $validated['status'] === 'pending_review' ? 'sent' : $validated['status'];
+                $notes = $this->getStatusChangeNote($validated['status']);
+                
+                if ($validated['status'] === 'pending_review') {
+                    $notes = 'Dokumen dikirim untuk review';
+                }
+            } else if ($targetChanged) {
+                $notes = 'Tujuan dokumen diubah ke ' . ($validated['target']['value'] ?? $document->target_value);
+            }
+            
+            $document->createLog($action, $user, $notes, $oldStatus, $validated['status'] ?? $oldStatus);
+        } else {
+            $document->createLog($action, $user, $notes);
+        }
 
         return response()->json([
             'success' => true,
-            'document' => $document->fresh(),
+            'document' => $document->fresh(['logs', 'approvals']),
         ]);
+    }
+
+    /**
+     * Get human-readable note for status change.
+     */
+    private function getStatusChangeNote($status)
+    {
+        $notes = [
+            'draft' => 'Dokumen disimpan sebagai draft',
+            'pending_review' => 'Dokumen dikirim untuk review',
+            'needs_revision' => 'Dokumen memerlukan revisi',
+            'approved' => 'Dokumen disetujui',
+            'sent' => 'Dokumen dikirim',
+            'received' => 'Dokumen diterima',
+        ];
+        
+        return $notes[$status] ?? 'Status dokumen diubah';
+    }
+
+    /**
+     * Get document logs (delivery history).
+     */
+    public function logs($id)
+    {
+        $document = Document::findOrFail($id);
+        $logs = $document->logs()->with('user')->get();
+        
+        return response()->json($logs);
     }
 
     /**

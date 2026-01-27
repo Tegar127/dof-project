@@ -465,6 +465,53 @@
                 </fieldset>
             </div>
             
+            <!-- Log Timeline Section (NEW) -->
+            <div x-show="document.id" class="px-6 py-4 border-t border-slate-100 bg-slate-50/30">
+                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Riwayat Aktivitas
+                </h3>
+                
+                <div class="space-y-4">
+                    <template x-if="loadingLogs">
+                        <div class="text-center py-4 text-xs text-slate-400 italic">Memuat riwayat...</div>
+                    </template>
+                    
+                    <template x-if="!loadingLogs && logs.length === 0">
+                        <div class="text-center py-4 text-xs text-slate-400 italic">Belum ada riwayat</div>
+                    </template>
+
+                    <template x-for="log in logs" :key="log.id">
+                        <div class="relative pl-6 pb-4 last:pb-0">
+                            <!-- Dot -->
+                            <div class="absolute left-0 top-1 w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm"
+                                 :class="{
+                                    'bg-blue-500': log.action === 'created',
+                                    'bg-emerald-500': log.action === 'sent' || log.action === 'approved',
+                                    'bg-amber-500': log.action === 'needs_revision' || log.action === 'revised',
+                                    'bg-violet-500': log.action === 'received',
+                                    'bg-slate-400': log.action === 'updated'
+                                 }"></div>
+                            <!-- Line -->
+                            <div class="absolute left-[4.5px] top-4 bottom-0 w-px bg-slate-200"></div>
+                            
+                            <div class="flex flex-col">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-xs font-bold text-slate-800" x-text="log.notes || log.action"></span>
+                                    <span class="text-[10px] text-slate-400 whitespace-nowrap" x-text="new Date(log.created_at).toLocaleDateString('id-ID', {day:'2-digit', month:'short'})"></span>
+                                </div>
+                                <div class="text-[10px] text-slate-500 mt-0.5">
+                                    <span class="font-medium text-indigo-600" x-text="log.user_name"></span>
+                                    <span x-show="log.user_position" x-text="' (' + log.user_position + ')'"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            
             <!-- Bottom Actions -->
             <div class="p-6 bg-white border-t border-gray-100 pb-20 lg:pb-6">
                 
@@ -500,6 +547,31 @@
                     </div>
                 </template>
 
+                <!-- Deadline Setting (for all users) -->
+                <template x-if="currentUser?.role === 'user' && (document.status === 'draft' || document.status === 'needs_revision')">
+                    <div class="mb-4 bg-gradient-to-br from-indigo-50 to-blue-50 p-5 rounded-xl border border-indigo-100 shadow-sm">
+                        <div class="flex items-center gap-2 text-indigo-800 mb-3">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <h4 class="text-sm font-bold">Batas Waktu (Opsional)</h4>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-xs text-indigo-600 font-medium ml-1">Set Deadline Dokumen</label>
+                            <input 
+                                type="datetime-local" 
+                                x-model="document.deadline"
+                                class="w-full px-4 py-3 bg-white border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                                :min="new Date().toISOString().slice(0, 16)"
+                            >
+                            <p class="text-xs text-indigo-600 ml-1">
+                                <span x-show="!document.deadline">Tidak ada deadline yang diatur</span>
+                                <span x-show="document.deadline" x-text="'Deadline: ' + formatDeadlineDisplay(document.deadline)"></span>
+                            </p>
+                        </div>
+                    </div>
+                </template>
+
                  <!-- User Send Button -->
                 <template x-if="currentUser?.role === 'user' && (document.status === 'draft' || document.status === 'needs_revision')">
                     <div class="mb-4">
@@ -512,6 +584,22 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                             </svg>
                         </button>
+                    </div>
+                </template>
+
+                <!-- Forward Button for Received Documents -->
+                <template x-if="currentUser?.role === 'user' && (document.status === 'received' || document.status === 'sent') && document.author_id !== currentUser.id">
+                    <div class="mb-4">
+                        <button 
+                            @click="showSendModal = true" 
+                            class="w-full bg-emerald-600 text-white py-3 rounded-lg font-bold hover:bg-emerald-700 transition-colors flex justify-center items-center gap-2"
+                        >
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>TERUSKAN DOKUMEN</span>
+                        </button>
+                        <p class="text-xs text-slate-500 text-center mt-2">Kirim dokumen ini ke group/divisi lain</p>
                     </div>
                 </template>
 

@@ -4,6 +4,8 @@ use App\Http\Controllers\Admin\GroupController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\DocumentApprovalController;
+use App\Http\Controllers\FolderController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -29,6 +31,19 @@ Route::middleware('auth:sanctum')->group(function () {
     // Document routes (all authenticated users)
     Route::apiResource('documents', DocumentController::class);
     Route::get('/groups', [GroupController::class, 'index']);
+    
+    // Document logs
+    Route::get('/documents/{id}/logs', [DocumentController::class, 'logs']);
+    
+    // Document approvals
+    Route::get('/documents/{id}/approvals', [DocumentApprovalController::class, 'index']);
+    Route::post('/documents/{documentId}/approvals/{approvalId}/approve', [DocumentApprovalController::class, 'approve']);
+    Route::post('/documents/{documentId}/approvals/{approvalId}/reject', [DocumentApprovalController::class, 'reject']);
+    Route::put('/documents/{id}/approvals/sequence', [DocumentApprovalController::class, 'updateSequence']);
+    
+    // Folders
+    Route::apiResource('folders', FolderController::class);
+    Route::post('/documents/{id}/move', [FolderController::class, 'moveDocument']);
 
     // Admin only routes
     Route::middleware('role:admin')->group(function () {

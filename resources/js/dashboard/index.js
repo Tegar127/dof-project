@@ -1,10 +1,12 @@
-window.dashboardApp = function() {
+window.dashboardApp = function () {
     return {
         currentUser: null,
         token: null,
         documents: [],
         filteredDocs: [],
         searchTerm: '',
+        selectedFolder: null,
+        deadlineFilter: 'all', // all, upcoming, overdue, none
         showCreateModal: false,
         showDeleteModal: false,
         docToDelete: null,
@@ -12,6 +14,7 @@ window.dashboardApp = function() {
         documentType: null,
         showSuccessModal: false,
         alertMessage: '',
+        folders: [],
 
         async init() {
             // Check for success messages in URL
@@ -19,7 +22,7 @@ window.dashboardApp = function() {
             if (urlParams.get('success') === 'sent') {
                 this.alertMessage = 'Dokumen berhasil dikirim ke tujuan!';
                 this.showSuccessModal = true;
-                
+
                 // Clean up URL without refreshing
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
@@ -27,7 +30,7 @@ window.dashboardApp = function() {
             // Check authentication
             const userData = localStorage.getItem('dof_user');
             const token = localStorage.getItem('dof_token');
-            
+
             if (!userData || !token) {
                 window.location.href = '/login';
                 return;
@@ -47,9 +50,21 @@ window.dashboardApp = function() {
 
             // Load documents
             await this.loadDocuments();
+            await this.loadFolders();
 
-            // Watch search term
+            // Watch filters
             this.$watch('searchTerm', () => this.filterDocuments());
+            this.$watch('selectedFolder', () => this.filterDocuments());
+            this.$watch('deadlineFilter', () => this.filterDocuments());
+
+            // Listen for folder events
+            window.addEventListener('folder-selected', (e) => {
+                this.selectedFolder = e.detail.folderId;
+            });
+
+            window.addEventListener('document-moved', () => {
+                this.loadDocuments();
+            });
         },
 
         async refreshUserData() {
@@ -65,7 +80,7 @@ window.dashboardApp = function() {
                     const user = await response.json();
                     this.currentUser = user;
                     localStorage.setItem('dof_user', JSON.stringify(user));
-                    
+
                     // Re-check admin role
                     if (this.currentUser.role === 'admin') {
                         window.location.href = '/admin';
@@ -109,7 +124,50 @@ window.dashboardApp = function() {
                 );
             }
 
+            // Filter by folder
+            if (this.selectedFolder) {
+                docs = docs.filter(d => d.folder_id === this.selectedFolder);
+            }
+
+            // Filter by deadline
+            if (this.deadlineFilter !== 'all') {
+                const now = new Date();
+
+                if (this.deadlineFilter === 'upcoming') {
+                    docs = docs.filter(d => {
+                        if (!d.deadline) return false;
+                        const deadline = new Date(d.deadline);
+                        return deadline > now;
+                    });
+                } else if (this.deadlineFilter === 'overdue') {
+                    docs = docs.filter(d => {
+                        if (!d.deadline) return false;
+                        const deadline = new Date(d.deadline);
+                        return deadline < now;
+                    });
+                } else if (this.deadlineFilter === 'none') {
+                    docs = docs.filter(d => !d.deadline);
+                }
+            }
+
             this.filteredDocs = docs;
+        },
+
+        async loadFolders() {
+            try {
+                const response = await fetch('/api/folders', {
+                    headers: {
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    this.folders = await response.json();
+                }
+            } catch (error) {
+                console.error('Error loading folders:', error);
+            }
         },
 
         handleCreate(type) {
@@ -122,7 +180,7 @@ window.dashboardApp = function() {
                 alert('Nama dokumen tidak boleh kosong!');
                 return;
             }
-            
+
             localStorage.setItem('dof_new_doc', JSON.stringify({
                 type: this.documentType,
                 name: this.documentName
@@ -201,6 +259,60 @@ window.dashboardApp = function() {
                 approved: 'Approved'
             };
             return labels[status] || 'Draft';
+        },
+
+        getDeadlineStatus(deadline) {
+            if (!deadline) return null;
+
+            const now = new Date();
+            const deadlineDate = new Date(deadline);
+            const diff = deadlineDate - now;
+            const daysRemaining = diff / (1000 * 60 * 60 * 24);
+
+            if (diff < 0) return 'overdue';
+            if (daysRemaining < 1) return 'urgent';
+            if (daysRemaining < 3) return 'soon';
+            return 'normal';
+        },
+
+        getDeadlineColor(status) {
+            const colors = {
+                overdue: 'text-red-600',
+                urgent: 'text-red-600',
+                soon: 'text-amber-600',
+                normal: 'text-emerald-600'
+            };
+            return colors[status] || 'text-slate-600';
+        },
+
+        formatDeadline(deadline) {
+            if (!deadline) return '';
+
+            const now = new Date();
+            const deadlineDate = new Date(deadline);
+            const diff = deadlineDate - now;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+            if (diff < 0) {
+                return 'Terlambat';
+            } else if (days > 0) {
+                return `${days} hari`;
+            } else if (hours > 0) {
+                return `${hours} jam`;
+            } else {
+                return 'Segera';
+            }
+        },
+
+        getPositionLabel(position) {
+            const labels = {
+                direksi: 'Direksi',
+                kadiv: 'Kepala Divisi',
+                kabid: 'Kepala Bidang',
+                staff: 'Staff'
+            };
+            return labels[position] || position || '-';
         }
     }
 }

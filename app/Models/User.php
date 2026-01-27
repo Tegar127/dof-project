@@ -25,6 +25,8 @@ class User extends Authenticatable
         'password',
         'role',
         'group_name',
+        'position',
+        'department',
     ];
 
     /**
@@ -80,5 +82,94 @@ class User extends Authenticatable
     public function isUser()
     {
         return $this->role === 'user';
+    }
+
+    /**
+     * Check if user is Direksi.
+     */
+    public function isDireksi()
+    {
+        return $this->position === 'direksi';
+    }
+
+    /**
+     * Check if user is Kadiv.
+     */
+    public function isKadiv()
+    {
+        return $this->position === 'kadiv';
+    }
+
+    /**
+     * Check if user is Kabid.
+     */
+    public function isKabid()
+    {
+        return $this->position === 'kabid';
+    }
+
+    /**
+     * Check if user is Staff.
+     */
+    public function isStaff()
+    {
+        return $this->position === 'staff';
+    }
+
+    /**
+     * Get hierarchy level (higher number = higher authority).
+     */
+    public function getHierarchyLevel()
+    {
+        $levels = [
+            'staff' => 1,
+            'kabid' => 2,
+            'kadiv' => 3,
+            'direksi' => 4,
+        ];
+        
+        return $levels[$this->position] ?? 0;
+    }
+
+    /**
+     * Check if user can approve based on position.
+     */
+    public function canApprove($requiredPosition)
+    {
+        $levels = [
+            'staff' => 1,
+            'kabid' => 2,
+            'kadiv' => 3,
+            'direksi' => 4,
+        ];
+        
+        $userLevel = $levels[$this->position] ?? 0;
+        $requiredLevel = $levels[$requiredPosition] ?? 0;
+        
+        return $userLevel >= $requiredLevel;
+    }
+
+    /**
+     * Get document logs created by this user.
+     */
+    public function documentLogs()
+    {
+        return $this->hasMany(DocumentLog::class);
+    }
+
+    /**
+     * Get read receipts for this user.
+     */
+    public function readReceipts()
+    {
+        return $this->hasMany(DocumentReadReceipt::class);
+    }
+
+    /**
+     * Get approvals assigned to this user.
+     */
+    public function approvals()
+    {
+        return $this->hasMany(DocumentApproval::class, 'approver_id');
     }
 }

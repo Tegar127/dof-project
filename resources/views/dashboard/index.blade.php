@@ -277,6 +277,7 @@
                             <th class="px-6 py-4">Dokumen</th>
                             <th class="px-6 py-4">Tipe</th>
                             <th class="px-6 py-4">Tanggal</th>
+                            <th class="px-6 py-4">Deadline</th>
                             <th class="px-6 py-4">Status</th>
                             <th class="px-6 py-4 text-right">Aksi</th>
                         </tr>
@@ -284,7 +285,7 @@
                     <tbody class="divide-y divide-slate-50">
                         <template x-if="filteredDocs.length === 0">
                             <tr>
-                                <td colspan="5" class="px-6 py-12 text-center">
+                                <td colspan="6" class="px-6 py-12 text-center">
                                     <div class="flex flex-col items-center justify-center text-slate-400">
                                         <svg class="w-12 h-12 mb-3 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -330,6 +331,15 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
+                                    <div x-show="doc.deadline" class="flex items-center gap-2">
+                                        <svg class="w-4 h-4" :class="getDeadlineColor(getDeadlineStatus(doc.deadline))" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span class="text-sm font-medium" :class="getDeadlineColor(getDeadlineStatus(doc.deadline))" x-text="formatDeadline(doc.deadline)"></span>
+                                    </div>
+                                    <div x-show="!doc.deadline" class="text-xs text-slate-400">-</div>
+                                </td>
+                                <td class="px-6 py-4">
                                     <span :class="getStatusClass(doc.status)" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold">
                                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -348,10 +358,16 @@
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex items-center justify-end gap-2">
                                         <a
-                                            :href="'/editor/' + doc.id"
+                                            :href="'/documents/' + doc.id"
                                             class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm"
                                         >
-                                            <span x-text="currentUser?.role === 'reviewer' ? 'Review' : 'Buka'"></span>
+                                            <span>Detail</span>
+                                        </a>
+                                        <a
+                                            :href="'/editor/' + doc.id"
+                                            class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-all shadow-sm"
+                                        >
+                                            <span x-text="currentUser?.role === 'reviewer' ? 'Review' : 'Edit'"></span>
                                         </a>
                                         <template x-if="currentUser?.role === 'user'">
                                             <button

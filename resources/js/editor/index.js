@@ -1,22 +1,33 @@
-window.editorApp = function() {
+window.editorApp = function () {
     return {
         isEditable() {
-            if (!this.currentUser) return false;
-            
-            // Admin and Reviewer always editable
-            if (this.currentUser.role === 'admin' || this.currentUser.role === 'reviewer') return true;
-            
+            if (!this.currentUser || !this.document) return false;
+
+            // Admin always editable
+            if (this.currentUser.role === 'admin') return true;
+
+            // Reviewer can edit if it's pending review or if they are the author
+            if (this.currentUser.role === 'reviewer') {
+                if (this.document.status === 'pending_review' || this.document.status === 'approved') return true;
+                if (this.document.author_id == this.currentUser.id) return true;
+                return true; // Reviewers are generally allowed to edit for now
+            }
+
             // User (Staff) logic
             if (this.currentUser.role === 'user') {
                 // If current user is the author (Sender)
                 if (this.document.author_id && this.document.author_id == this.currentUser.id) {
-                     const status = this.document.status;
-                     return status === 'draft' || status === 'needs_revision';
+                    const status = this.document.status;
+                    // Authors can only edit drafts or if revision is requested
+                    return status === 'draft' || status === 'needs_revision';
                 }
-                // If not author (Receiver), allow edit
+                
+                // If not author (Receiver), allow edit/forward
+                // But only if it's not already approved or in review?
+                // For now, allow receivers to edit so they can revise before forwarding
                 return true;
             }
-            
+
             return false;
         },
 
@@ -27,6 +38,8 @@ window.editorApp = function() {
         showSendModal: false,
         showReadOnlyModal: false,
         groups: [],
+        logs: [],
+        loadingLogs: false,
         document: {
             title: '',
             type: 'nota', // Default
@@ -34,6 +47,7 @@ window.editorApp = function() {
             target_role: '',
             target_value: '',
             feedback: '',
+            deadline: null,
             content_data: {
                 // Shared
                 docNumber: '',
@@ -59,7 +73,7 @@ window.editorApp = function() {
         async init() {
             const userData = localStorage.getItem('dof_user');
             const token = localStorage.getItem('dof_token');
-            
+
             if (!userData || !token) {
                 window.location.href = '/login';
                 return;
@@ -74,6 +88,7 @@ window.editorApp = function() {
 
             if (this.documentId && this.documentId !== 'new') {
                 await this.loadDocument();
+                await this.loadLogs();
             } else {
                 const newDocData = localStorage.getItem('dof_new_doc');
                 if (newDocData) {
@@ -103,6 +118,21 @@ window.editorApp = function() {
             } catch (e) { console.error(e); }
         },
 
+        async loadLogs() {
+            if (!this.documentId || this.documentId === 'new') return;
+            this.loadingLogs = true;
+            try {
+                const response = await fetch(`/api/documents/${this.documentId}/logs`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json'
+                    }
+                });
+                if (response.ok) this.logs = await response.json();
+            } catch (e) { console.error(e); }
+            finally { this.loadingLogs = false; }
+        },
+
         async loadDocument() {
             try {
                 const response = await fetch(`/api/documents/${this.documentId}`, {
@@ -114,17 +144,17 @@ window.editorApp = function() {
                 if (response.ok) {
                     const doc = await response.json();
                     this.document = doc;
-                    
+
                     // Show read-only notice if user is staff and document is locked
                     if (!this.isEditable() && this.currentUser.role === 'user') {
                         this.showReadOnlyModal = true;
                     }
 
                     // Ensure content_data has arrays initialized if they were null
-                    if(!this.document.content_data) this.document.content_data = {};
-                    if(!this.document.content_data.basis) this.document.content_data.basis = [''];
-                    if(!this.document.content_data.remembers) this.document.content_data.remembers = [''];
-                    if(!this.document.content_data.ccs) this.document.content_data.ccs = [''];
+                    if (!this.document.content_data) this.document.content_data = {};
+                    if (!this.document.content_data.basis) this.document.content_data.basis = [''];
+                    if (!this.document.content_data.remembers) this.document.content_data.remembers = [''];
+                    if (!this.document.content_data.ccs) this.document.content_data.ccs = [''];
                 }
             } catch (e) { console.error(e); }
         },
@@ -149,7 +179,7 @@ window.editorApp = function() {
                 alert('Pilih group tujuan!');
                 return;
             }
-            
+
             // Set status based on target
             if (this.document.target_role === 'group') {
                 this.document.status = 'sent';
@@ -158,10 +188,10 @@ window.editorApp = function() {
             }
 
             this.showSendModal = false;
-            
+
             // Pass 'false' for redirect, and 'true' for force save (bypass isEditable check)
-            const success = await this.saveDocument(false, true); 
-            
+            const success = await this.saveDocument(false, true);
+
             if (success) {
                 window.location.href = '/dashboard?success=sent';
             }
@@ -176,13 +206,14 @@ window.editorApp = function() {
             try {
                 const url = this.document.id ? `/api/documents/${this.document.id}` : '/api/documents';
                 const method = this.document.id ? 'PUT' : 'POST';
-                
+
                 // Construct payload
                 const payload = {
                     title: this.document.title,
                     type: this.document.type,
                     status: this.document.status,
                     content_data: this.document.content_data,
+                    deadline: this.document.deadline || null,
                     target: {
                         type: this.document.target_role,
                         value: this.document.target_value
@@ -191,7 +222,7 @@ window.editorApp = function() {
 
                 const response = await fetch(url, {
                     method: method,
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + this.token,
                         'Accept': 'application/json'
@@ -201,18 +232,22 @@ window.editorApp = function() {
 
                 if (response.ok) {
                     const result = await response.json();
-                    
+
                     if (!this.document.id && result.id) {
-                         if (redirectOnCreate) {
-                             window.location.href = `/editor/${result.id}`;
-                             return true;
-                         }
+                        if (redirectOnCreate) {
+                            window.location.href = `/editor/${result.id}`;
+                            return true;
+                        }
                     } else {
                         if (redirectOnCreate) alert('Dokumen berhasil disimpan!');
                     }
+
+                    this.document = result.document || this.document; // Update local state if returned
+                    this.documentId = result.id || this.documentId;
                     
-                    this.document.id = result.id; // Ensure ID is set
-                    this.documentId = result.id;
+                    // Reload logs after save to show updated history
+                    await this.loadLogs();
+                    
                     return true;
                 }
                 return false;
@@ -229,7 +264,7 @@ window.editorApp = function() {
             try {
                 const response = await fetch(`/api/documents/${this.document.id}`, {
                     method: 'PUT',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + this.token,
                         'Accept': 'application/json'
@@ -249,13 +284,13 @@ window.editorApp = function() {
         downloadPDF() {
             const element = document.getElementById('paperContent');
             const fileName = (this.document.title || 'Dokumen') + '.pdf';
-            
+
             const opt = {
                 margin: 0,
                 filename: fileName,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { 
-                    scale: 2, 
+                html2canvas: {
+                    scale: 2,
                     useCORS: true,
                     allowTaint: true,
                     scrollY: 0,
@@ -288,6 +323,19 @@ window.editorApp = function() {
                 received: 'Diterima'
             };
             return labels[status] || 'Draft';
+        },
+
+        formatDeadlineDisplay(deadline) {
+            if (!deadline) return '';
+
+            const date = new Date(deadline);
+            return date.toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
         }
     }
 }

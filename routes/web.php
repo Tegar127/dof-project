@@ -22,3 +22,7 @@ Route::get('/admin', function () {
 Route::get('/editor/{id?}', function ($id = 'new') {
     return view('editor.index', ['documentId' => $id]);
 })->name('editor');
+
+Route::get('/documents/{id}', function ($id) {
+    return view('documents.view', ['documentId' => $id]);
+})->name('documents.view');
