@@ -65,7 +65,8 @@
 
         <!-- Deadline Alert -->
         <div x-show="document?.deadline" class="mb-6">
-            <div x-data="deadlineManager(document?.deadline)" x-init="init()" 
+            <div x-data="deadlineManager(null)" 
+                 x-effect="setDeadline(document?.deadline)"
                  :class="getDeadlineColor()" 
                  class="p-4 rounded-lg border flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -213,6 +214,15 @@
                                                             <span class="font-medium" x-text="log.user_name"></span>
                                                         </div>
                                                         <span x-show="log.user_position" class="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md text-xs font-semibold uppercase tracking-wide" x-text="log.user_position"></span>
+                                                        
+                                                        <!-- Group Info -->
+                                                        <span x-show="log.metadata?.group || log.user?.group_name" 
+                                                              class="flex items-center gap-1 text-slate-500 text-xs border-l border-slate-300 pl-2 ml-1">
+                                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                                            </svg>
+                                                            <span x-text="log.metadata?.group || log.user?.group_name"></span>
+                                                        </span>
                                                     </div>
                                                 </div>
                                                 <div class="flex items-center gap-1.5 text-xs text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg">
@@ -301,11 +311,6 @@
         </div>
     </div>
 </div>
-
-<script src="{{ asset('js/components/delivery-log-timeline.js') }}"></script>
-<script src="{{ asset('js/components/approval-workflow.js') }}"></script>
-<script src="{{ asset('js/components/deadline-manager.js') }}"></script>
-<script src="{{ asset('js/components/read-receipt-tracker.js') }}"></script>
 
 <script>
 function documentDetailApp() {

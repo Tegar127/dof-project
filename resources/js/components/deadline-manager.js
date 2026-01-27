@@ -15,6 +15,11 @@ window.deadlineManager = function (deadline = null) {
             }, 60000);
         },
 
+        setDeadline(newDeadline) {
+            this.deadline = newDeadline;
+            this.calculateTimeRemaining();
+        },
+
         destroy() {
             if (this.updateInterval) {
                 clearInterval(this.updateInterval);

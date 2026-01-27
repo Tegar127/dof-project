@@ -18,8 +18,8 @@ window.editorApp = function () {
                 // If current user is the author (Sender)
                 if (this.document.author_id && this.document.author_id == this.currentUser.id) {
                     const status = this.document.status;
-                    // Authors can only edit drafts or if revision is requested
-                    return status === 'draft' || status === 'needs_revision';
+                    // Authors can only edit drafts, revisions, or if returned (received)
+                    return status === 'draft' || status === 'needs_revision' || status === 'received';
                 }
                 
                 // If not author (Receiver), allow edit/forward
@@ -140,8 +140,12 @@ window.editorApp = function () {
                         this.showReadOnlyModal = true;
                     }
 
+                    // Ensure content_data is an object (fix for empty array issue)
+                    if (!this.document.content_data || Array.isArray(this.document.content_data)) {
+                        this.document.content_data = {};
+                    }
+
                     // Ensure content_data has arrays initialized if they were null
-                    if (!this.document.content_data) this.document.content_data = {};
                     if (!this.document.content_data.basis) this.document.content_data.basis = [''];
                     if (!this.document.content_data.remembers) this.document.content_data.remembers = [''];
                     if (!this.document.content_data.ccs) this.document.content_data.ccs = [''];

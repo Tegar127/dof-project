@@ -111,6 +111,7 @@ class Document extends Model
             'status_from' => $statusFrom,
             'status_to' => $statusTo,
             'notes' => $notes,
+            'metadata' => ['group' => $user->group_name ?? null],
             'created_at' => now(),
         ]);
     }
