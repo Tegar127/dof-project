@@ -38,6 +38,7 @@ window.editorApp = function () {
         currentUser: null,
         token: null,
         saving: false,
+        isDownloading: false,
         showSendModal: false,
         showReadOnlyModal: false,
         showSuccessModal: false,
@@ -359,30 +360,13 @@ window.editorApp = function () {
         },
 
         downloadPDF() {
-            const element = document.getElementById('paperContent');
-            const fileName = (this.document.title || 'Dokumen') + '.pdf';
-
-            const opt = {
-                margin: 0,
-                filename: fileName,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: {
-                    scale: 2,
-                    useCORS: true,
-                    allowTaint: true,
-                    scrollY: 0,
-                    scrollX: 0
-                },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            // Ensure window.html2pdf is available (from app.js)
-            if (window.html2pdf) {
-                window.html2pdf().set(opt).from(element).save();
-            } else {
-                this.alertMessage = 'HTML2PDF library not loaded.';
+            if (!this.document.id) {
+                this.alertMessage = 'Harap simpan dokumen terlebih dahulu sebelum mencetak.';
                 this.showSuccessModal = true;
+                return;
             }
+            // Open the print view in a new tab. The print view has onload="window.print()"
+            window.open(`/documents/${this.document.id}/print`, '_blank');
         },
 
         formatDate(dateStr) {

@@ -741,13 +741,76 @@
 
     </div>
 
+    <style>
+        /* CSS for Print / Save as PDF */
+        @media print {
+            /* Hide everything by default */
+            body * {
+                visibility: hidden;
+            }
+            
+            /* Hide the main scrollbars */
+            html, body {
+                height: auto;
+                overflow: visible !important;
+                background: white !important;
+            }
+
+            /* Specifically hide fixed elements that might persist */
+            .fixed, header, nav, aside, button, .sidebar-container {
+                display: none !important;
+            }
+
+            /* Make the paper content visible and positioned correctly */
+            #paperContent, #paperContent * {
+                visibility: visible;
+            }
+
+            #paperContent {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 20mm !important; /* Ensure proper print padding */
+                box-shadow: none !important;
+                background-color: white !important;
+                color: black !important;
+                min-height: auto !important;
+                overflow: visible !important;
+            }
+
+            /* Ensure images are visible */
+            img {
+                display: inline-block !important;
+                opacity: 1 !important;
+                max-width: 100% !important;
+            }
+            
+            /* Reset specific backgrounds for print to be clean */
+            .bg-slate-50, .bg-gray-100, .bg-fuchsia-50 {
+                background-color: transparent !important;
+                border: 1px solid #ddd !important; /* Add border for visibility if needed */
+            }
+            
+            /* Force table layouts */
+            table {
+                width: 100% !important;
+                page-break-inside: auto;
+            }
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+        }
+    </style>
     <!-- Right Content: Paper Preview -->
-    <div class="flex-1 bg-slate-200 overflow-y-auto p-8 flex justify-center relative">
-        <div id="paperContent" class="paper relative min-h-[297mm]" style="color: #000000 !important; background-color: #ffffff !important;">
+    <div class="flex-1 overflow-y-auto p-8 flex justify-center relative print:p-0 print:overflow-visible" style="background-color: #e2e8f0;">
+        <div id="paperContent" class="paper relative min-h-[297mm]" style="color: #000000 !important; background-color: #ffffff !important; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
             
             <div class="flex items-center mb-2">
-                <!-- Using local asset if available, fallback to provided URL -->
-                <img src="/images/logo_asa.png" onerror="this.src='https://pensiun.asabri.co.id/resources/img/logo_asa.png'" alt="ASABRI Logo" class="h-16 mb-2">
+                <!-- Using local asset if available. Removed external fallback to prevent CORS/Taint errors during PDF generation. -->
+                <img src="/images/logo_asa.png" alt="ASABRI Logo" class="h-16 mb-2" style="height: 4rem; margin-bottom: 0.5rem;">
             </div>
 
             <!-- PREVIEW: NOTA DINAS -->
@@ -801,7 +864,7 @@
 
                     <div style="clear: both;"></div>
                     <table class="paraf-box">
-                        <tr><td colspan="2" class="text-center font-bold" style="background-color: #f3f4f6;">BD-MLI</td></tr>
+                        <tr><td colspan="2" class="text-center font-bold" style="background-color: #f3f4f6 !important;">BD-MLI</td></tr>
                         <tr><td rowspan="2" class="text-center align-middle" width="50%">Paraf</td><td class="text-center">Staff</td></tr>
                         <tr><td class="text-center" height="30"> </td></tr>
                     </table>

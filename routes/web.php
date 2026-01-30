@@ -26,3 +26,5 @@ Route::get('/editor/{id?}', function ($id = 'new') {
 Route::get('/documents/{id}', function ($id) {
     return view('documents.view', ['documentId' => $id]);
 })->name('documents.view');
+
+Route::get('/documents/{document}/print', [App\Http\Controllers\DocumentController::class, 'print'])->name('documents.print');

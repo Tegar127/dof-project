@@ -10,6 +10,14 @@ use Illuminate\Support\Facades\Auth;
 class DocumentController extends Controller
 {
     /**
+     * Show the print view for the document.
+     */
+    public function print(Document $document)
+    {
+        return view('documents.print', ['document' => $document]);
+    }
+
+    /**
      * Display a listing of documents based on user role.
      */
     public function index(Request $request)

@@ -15,7 +15,7 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="bg-gray-100 font-sans antialiased">
+<body class="font-sans antialiased" style="background-color: #f3f4f6;">
     @yield('content')
 </body>
 </html>
