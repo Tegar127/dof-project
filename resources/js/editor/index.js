@@ -1,3 +1,5 @@
+import SignaturePad from 'signature_pad';
+
 window.editorApp = function () {
     return {
         isEditable() {
@@ -40,6 +42,8 @@ window.editorApp = function () {
         showReadOnlyModal: false,
         showSuccessModal: false,
         showConfirmModal: false,
+        showSignatureModal: false,
+        signaturePad: null,
         alertMessage: '',
         confirmTitle: '',
         confirmMessage: '',
@@ -66,7 +70,7 @@ window.editorApp = function () {
                 content: '',
                 date: '',
                 division: '',
-                signerPosition: '', signerName: '',
+                signerPosition: '', signerName: '', signature: '',
                 // SPPD
                 weigh: '',
                 remembers: [''],
@@ -101,6 +105,46 @@ window.editorApp = function () {
                 // 'new' is no longer supported directly, must create via dashboard
                 window.location.href = '/dashboard';
             }
+        },
+
+        initSignaturePad() {
+            this.showSignatureModal = true;
+            this.$nextTick(() => {
+                const canvas = document.getElementById('signature-canvas');
+                if (canvas) {
+                    // Adjust canvas ratio for high DPI screens
+                    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                    canvas.width = canvas.offsetWidth * ratio;
+                    canvas.height = canvas.offsetHeight * ratio;
+                    canvas.getContext('2d').scale(ratio, ratio);
+
+                    this.signaturePad = new SignaturePad(canvas, {
+                        backgroundColor: 'rgba(255, 255, 255, 0)', // Transparent
+                        penColor: 'rgb(0, 0, 0)'
+                    });
+                }
+            });
+        },
+
+        clearSignature() {
+            if (this.signaturePad) {
+                this.signaturePad.clear();
+            }
+        },
+
+        saveSignature() {
+            if (this.signaturePad && !this.signaturePad.isEmpty()) {
+                const data = this.signaturePad.toDataURL('image/png');
+                this.document.content_data.signature = data;
+                this.showSignatureModal = false;
+            } else {
+                this.alertMessage = 'Tanda tangan masih kosong!';
+                this.showSuccessModal = true;
+            }
+        },
+
+        removeSignature() {
+            this.document.content_data.signature = '';
         },
 
         async loadGroups() {

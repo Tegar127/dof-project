@@ -196,6 +196,9 @@ class DocumentController extends Controller
                 } else {
                     $action = 'sent';
                     $notes = 'Dokumen diteruskan ke ' . ($validated['target']['value'] ?? $document->target_value);
+                    
+                    // Increment version when forwarding
+                    $document->incrementVersion(true);
                 }
             } else if ($statusChanged) {
                 $action = $validated['status'] === DocumentStatus::PENDING_REVIEW->value ? 'sent' : $validated['status'];

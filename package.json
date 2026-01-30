@@ -16,6 +16,7 @@
     },
     "dependencies": {
         "alpinejs": "^3.15.4",
-        "html2pdf.js": "^0.14.0"
+        "html2pdf.js": "^0.14.0",
+        "signature_pad": "^5.1.3"
     }
 }

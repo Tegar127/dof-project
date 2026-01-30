@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('folders', 'category')) {
-            Schema::table('folders', function (Blueprint $table) {
+        Schema::table('folders', function (Blueprint $table) {
+            if (!Schema::hasColumn('folders', 'category')) {
                 $table->string('category')->nullable();
+            }
+            if (!Schema::hasColumn('folders', 'type')) {
                 $table->string('type')->nullable();
-            });
-        }
+            }
+        });
     }
 
     /**

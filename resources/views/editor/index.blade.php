@@ -5,6 +5,40 @@
 @section('content')
 <div class="flex flex-col lg:flex-row h-screen overflow-hidden bg-gray-100" x-data="editorApp()" x-init="init()">
     
+    <!-- Signature Modal -->
+    <div x-show="showSignatureModal" x-cloak class="fixed inset-0 z-[80] bg-black/50 flex items-center justify-center p-4">
+        <div @click.away="showSignatureModal = false" class="bg-white rounded-xl shadow-lg max-w-lg w-full p-6">
+            <h3 class="text-xl font-bold mb-4 text-slate-800">Tanda Tangan Digital</h3>
+            
+            <div class="border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 relative h-64 w-full mb-4 overflow-hidden touch-none">
+                <canvas id="signature-canvas" class="absolute inset-0 w-full h-full cursor-crosshair"></canvas>
+                <div class="absolute bottom-2 right-2 text-xs text-gray-400 pointer-events-none">Area Tanda Tangan</div>
+            </div>
+
+            <div class="flex gap-3">
+                <button 
+                    @click="clearSignature()" 
+                    class="px-4 py-2.5 text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-lg font-medium transition-colors"
+                >
+                    Hapus
+                </button>
+                <div class="flex-1"></div>
+                <button 
+                    @click="showSignatureModal = false" 
+                    class="px-4 py-2.5 text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+                >
+                    Batal
+                </button>
+                <button 
+                    @click="saveSignature()" 
+                    class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors shadow-sm"
+                >
+                    Simpan Tanda Tangan
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Read Only Modal -->
     <div x-show="showReadOnlyModal" x-cloak class="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4">
         <div @click.away="showReadOnlyModal = false" class="bg-white rounded-xl shadow-lg max-w-sm w-full p-6 text-center">
@@ -362,6 +396,24 @@
                                     <label class="text-xs text-slate-500 font-medium ml-1">Nama Lengkap</label>
                                     <input type="text" x-model="document.content_data.signerName" class="form-input-styled font-bold" placeholder="Nama Penandatangan">
                                 </div>
+                                
+                                <div class="pt-2">
+                                    <template x-if="!document.content_data.signature">
+                                        <button @click="initSignaturePad()" class="w-full py-2 border border-dashed border-indigo-300 text-indigo-600 text-xs font-bold rounded-lg hover:bg-indigo-50 transition-all flex items-center justify-center gap-2">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                            BUAT TANDA TANGAN
+                                        </button>
+                                    </template>
+                                    <template x-if="document.content_data.signature">
+                                        <div class="relative group border border-slate-200 rounded-lg p-2 bg-slate-50 text-center">
+                                            <img :src="document.content_data.signature" alt="Signature" class="h-16 mx-auto object-contain">
+                                            <button @click="removeSignature()" class="absolute top-1 right-1 bg-white text-red-500 rounded-full p-1 shadow hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                            </button>
+                                            <p class="text-[10px] text-slate-400 mt-1">Klik hapus untuk ulang</p>
+                                        </div>
+                                    </template>
+                                </div>
                             </div>
                         </div>
                     </template>
@@ -485,6 +537,24 @@
                                 <div class="space-y-1">
                                     <label class="text-xs text-slate-500 font-medium ml-1">Nama Penandatangan</label>
                                     <input type="text" x-model="document.content_data.signerName" class="form-input-styled font-bold">
+                                </div>
+                                
+                                <div class="pt-2">
+                                    <template x-if="!document.content_data.signature">
+                                        <button @click="initSignaturePad()" class="w-full py-2 border border-dashed border-indigo-300 text-indigo-600 text-xs font-bold rounded-lg hover:bg-indigo-50 transition-all flex items-center justify-center gap-2">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                            BUAT TANDA TANGAN
+                                        </button>
+                                    </template>
+                                    <template x-if="document.content_data.signature">
+                                        <div class="relative group border border-slate-200 rounded-lg p-2 bg-slate-50 text-center">
+                                            <img :src="document.content_data.signature" alt="Signature" class="h-16 mx-auto object-contain">
+                                            <button @click="removeSignature()" class="absolute top-1 right-1 bg-white text-red-500 rounded-full p-1 shadow hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                            </button>
+                                            <p class="text-[10px] text-slate-400 mt-1">Klik hapus untuk ulang</p>
+                                        </div>
+                                    </template>
                                 </div>
 
                                 <!-- Dynamic List: Tembusan -->
@@ -714,7 +784,18 @@
                     <div class="signature-section">
                         <p class="mb-1"><span x-text="document.content_data.location || '...'"></span>, <span x-text="formatDate(document.content_data.date)"></span></p>
                         <p class="font-bold uppercase mb-0"><span x-text="document.content_data.signerPosition || '...'"></span></p>
-                        <p class="font-bold uppercase mb-16"><span x-text="document.content_data.division || '...'"></span></p>
+                        <p class="font-bold uppercase mb-0"><span x-text="document.content_data.division || '...'"></span></p>
+                        
+                        <!-- Signature Image Placeholder -->
+                        <div class="h-24 w-full flex items-center justify-center">
+                            <template x-if="document.content_data.signature">
+                                <img :src="document.content_data.signature" class="h-24 object-contain" alt="Tanda Tangan">
+                            </template>
+                            <template x-if="!document.content_data.signature">
+                                <div class="h-24 w-full"></div>
+                            </template>
+                        </div>
+                        
                         <p class="font-bold uppercase underline"><span x-text="document.content_data.signerName || '...'"></span></p>
                     </div>
 
@@ -798,7 +879,18 @@
                         <p class="mb-1">Dikeluarkan di <span x-text="document.content_data.location || '...'"></span></p>
                         <p class="mb-1">pada tanggal <span x-text="formatDate(document.content_data.signDate)"></span></p>
                         <p class="font-bold uppercase mb-0">DIREKSI,</p>
-                        <p class="font-bold uppercase mb-16"><span x-text="document.content_data.signerPosition || '...'"></span></p>
+                        <p class="font-bold uppercase mb-0"><span x-text="document.content_data.signerPosition || '...'"></span></p>
+
+                        <!-- Signature Image Placeholder -->
+                        <div class="h-24 w-full flex items-center justify-center">
+                            <template x-if="document.content_data.signature">
+                                <img :src="document.content_data.signature" class="h-24 object-contain" alt="Tanda Tangan">
+                            </template>
+                            <template x-if="!document.content_data.signature">
+                                <div class="h-24 w-full"></div>
+                            </template>
+                        </div>
+
                         <p class="font-bold uppercase underline"><span x-text="document.content_data.signerName || '...'"></span></p>
                     </div>
 
