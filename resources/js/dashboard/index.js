@@ -256,9 +256,13 @@ window.dashboardApp = function () {
                     await this.loadDocuments();
                     this.showDeleteModal = false;
                     this.docToDelete = null;
+                } else {
+                    const data = await response.json();
+                    alert(data.message || 'Gagal menghapus dokumen.');
                 }
             } catch (error) {
                 console.error('Error deleting document:', error);
+                alert('Terjadi kesalahan saat menghapus dokumen.');
             }
         },
 

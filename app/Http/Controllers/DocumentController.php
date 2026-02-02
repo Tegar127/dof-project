@@ -275,6 +275,14 @@ class DocumentController extends Controller
             ], 403);
         }
 
+        // Prevent deletion of approved documents
+        if ($document->status === DocumentStatus::APPROVED) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot delete approved documents',
+            ], 403);
+        }
+
         $document->delete();
 
         return response()->json([
