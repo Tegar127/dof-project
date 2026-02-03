@@ -407,9 +407,13 @@ function documentHistory(documentId) {
                 this.currentUser = JSON.parse(userData);
             }
             this.loadLogs();
-            // Load versions when tab changes or initially if desired, but here we can load both or lazy load.
-            // Let's load both to be safe and responsive.
             this.loadVersions();
+
+            // Listen for global document updates to refresh history
+            window.addEventListener('document-updated', () => {
+                this.loadLogs();
+                this.loadVersions();
+            });
         },
 
         async loadLogs() {

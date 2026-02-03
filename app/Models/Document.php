@@ -175,7 +175,11 @@ class Document extends Model
      */
     public function incrementVersion($major = false)
     {
-        $parts = explode('.', $this->version);
+        // Refresh ONLY the version from DB to avoid race conditions
+        $latestDoc = $this->fresh();
+        $latestVersion = $latestDoc ? $latestDoc->version : ($this->version ?? '1.0');
+        
+        $parts = explode('.', $latestVersion);
         
         if ($major) {
             $parts[0] = (int)$parts[0] + 1;

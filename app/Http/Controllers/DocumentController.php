@@ -308,6 +308,15 @@ class DocumentController extends Controller
                     // Increment version if resending after revision
                     if ($oldStatus === DocumentStatus::NEEDS_REVISION) {
                         $document->incrementVersion();
+                        
+                        // Create version snapshot for this status change
+                        DocumentVersion::create([
+                            'document_id' => $document->id,
+                            'version_number' => $document->version,
+                            'content_data' => $document->content_data,
+                            'change_summary' => 'Dokumen dikirim kembali setelah revisi.',
+                            'updated_by' => $user->id,
+                        ]);
                     }
                 } else {
                     $action = 'sent';
@@ -315,6 +324,15 @@ class DocumentController extends Controller
                     
                     // Increment version when forwarding
                     $document->incrementVersion(true);
+
+                    // Create version snapshot for forwarding
+                    DocumentVersion::create([
+                        'document_id' => $document->id,
+                        'version_number' => $document->version,
+                        'content_data' => $document->content_data,
+                        'change_summary' => 'Dokumen diteruskan (Major Version Update).',
+                        'updated_by' => $user->id,
+                    ]);
                 }
             } else if ($statusChanged) {
                 $action = $validated['status'] === DocumentStatus::PENDING_REVIEW->value ? 'sent' : $validated['status'];
@@ -363,7 +381,7 @@ class DocumentController extends Controller
     public function logs($id)
     {
         $document = Document::findOrFail($id);
-        $logs = $document->logs()->with('user')->get();
+        $logs = $document->logs()->with('user')->orderBy('created_at', 'desc')->orderBy('id', 'desc')->get();
         
         return response()->json($logs);
     }
@@ -373,7 +391,7 @@ class DocumentController extends Controller
      */
     public function versions(Document $document)
     {
-        return response()->json($document->versions()->with('updater')->get());
+        return response()->json($document->versions()->with('updater')->orderBy('created_at', 'desc')->orderBy('id', 'desc')->get());
     }
 
     /**
