@@ -18,6 +18,7 @@ class DocumentLog extends Model
         'status_from',
         'status_to',
         'notes',
+        'changes',
         'metadata',
         'created_at',
     ];

@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentApprovalController;
+use App\Http\Controllers\DocumentWorkLogController;
 use App\Http\Controllers\FolderController;
 use Illuminate\Support\Facades\Route;
 
@@ -34,6 +35,10 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Document logs
     Route::get('/documents/{id}/logs', [DocumentController::class, 'logs']);
+    Route::post('/documents/{document}/work-logs', [DocumentWorkLogController::class, 'store']);
+    Route::get('/documents/{document}/work-logs', [DocumentWorkLogController::class, 'index']);
+    Route::get('/documents/{document}/versions', [DocumentController::class, 'versions']);
+    Route::post('/documents/{document}/versions/{versionId}/restore', [DocumentController::class, 'restoreVersion']);
     
     // Document approvals
     Route::get('/documents/{id}/approvals', [DocumentApprovalController::class, 'index']);
@@ -49,5 +54,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:admin')->group(function () {
         Route::apiResource('users', UserController::class);
         Route::post('/groups', [GroupController::class, 'store']);
+        Route::get('/groups/{id}/stats', [GroupController::class, 'showStats']);
     });
 });

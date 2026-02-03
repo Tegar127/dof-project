@@ -5,6 +5,9 @@ window.adminApp = function() {
         groups: [],
         showUserModal: false,
         showGroupModal: false,
+        showGroupDetailsModal: false, // New Modal State
+        selectedGroup: null, // Stores currently viewed group details
+        loadingGroupDetails: false,
         editingUser: null,
         userForm: {},
         groupForm: {},
@@ -41,6 +44,33 @@ window.adminApp = function() {
             setTimeout(() => {
                 this.notification.show = false;
             }, 3000);
+        },
+
+        async loadGroupDetails(groupId) {
+            this.loadingGroupDetails = true;
+            this.showGroupDetailsModal = true;
+            this.selectedGroup = null; // Clear previous
+            
+            try {
+                const response = await fetch(`/api/groups/${groupId}/stats`, {
+                    headers: { 
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json' 
+                    }
+                });
+                if (response.ok) {
+                    this.selectedGroup = await response.json();
+                } else {
+                    this.showNotification('Error loading group details', 'error');
+                    this.showGroupDetailsModal = false;
+                }
+            } catch (error) {
+                console.error('Error loading group details:', error);
+                this.showNotification('Error loading group details', 'error');
+                this.showGroupDetailsModal = false;
+            } finally {
+                this.loadingGroupDetails = false;
+            }
         },
 
         async loadUsers() {

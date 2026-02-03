@@ -23,6 +23,7 @@
                     <th class="px-6 py-4">Role</th>
                     <th class="px-6 py-4">Position</th>
                     <th class="px-6 py-4">Group</th>
+                    <th class="px-6 py-4">Total Work</th>
                     <th class="px-6 py-4 text-right">Actions</th>
                 </tr>
             </thead>
@@ -53,6 +54,12 @@
                                 <span class="text-sm font-medium text-slate-700" x-text="user.group_name"></span>
                             </div>
                             <span x-show="!user.group_name" class="text-sm text-slate-400 italic">No Group</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-col">
+                                <span class="text-sm font-bold text-slate-700" x-text="(user.work_logs_sum_duration_minutes || 0) + ' m'"></span>
+                                <span class="text-xs text-slate-400" x-text="((user.work_logs_sum_duration_minutes || 0) / 60).toFixed(1) + ' hrs'"></span>
+                            </div>
                         </td>
                         <td class="px-6 py-4 text-right">
                             <button

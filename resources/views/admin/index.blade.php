@@ -41,6 +41,61 @@
     @include('admin.partials.user-modal')
     @include('admin.partials.group-modal')
 
+    <!-- Group Details Modal -->
+    <div x-show="showGroupDetailsModal" x-cloak class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+        <div @click.away="showGroupDetailsModal = false" class="bg-white rounded-xl shadow-lg max-w-2xl w-full flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-indigo-50/50">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800" x-text="selectedGroup?.group.name || 'Group Details'"></h3>
+                    <p class="text-sm text-slate-500 mt-1">
+                        Total Work Time: <span class="font-bold text-indigo-600" x-text="(selectedGroup?.group.total_minutes || 0) + ' Minutes'"></span>
+                    </p>
+                </div>
+                <button @click="showGroupDetailsModal = false" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto bg-slate-50 flex-1">
+                 <template x-if="loadingGroupDetails">
+                    <div class="text-center py-8 text-slate-500">Loading details...</div>
+                </template>
+
+                <template x-if="!loadingGroupDetails && selectedGroup">
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Documents Worked On</h4>
+                        
+                        <template x-if="selectedGroup.documents.length === 0">
+                            <div class="text-center py-8 text-slate-400 border-2 border-dashed border-slate-200 rounded-xl">
+                                No work logged for this group yet.
+                            </div>
+                        </template>
+
+                        <div class="space-y-3">
+                            <template x-for="doc in selectedGroup.documents" :key="doc.id">
+                                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center hover:border-indigo-300 transition-colors">
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider" 
+                                                  :class="doc.type === 'nota' ? 'bg-indigo-50 text-indigo-600' : 'bg-emerald-50 text-emerald-600'"
+                                                  x-text="doc.type"></span>
+                                            <h4 class="font-bold text-slate-800 text-sm" x-text="doc.title"></h4>
+                                        </div>
+                                        <p class="text-xs text-slate-500">Last worked: <span x-text="new Date(doc.last_worked).toLocaleDateString('id-ID')"></span></p>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-lg font-bold text-indigo-600" x-text="doc.total_minutes + ' m'"></div>
+                                        <div class="text-xs text-slate-400">Total Time</div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div x-show="notification.show" 
          x-transition:enter="transition ease-out duration-300"

@@ -172,4 +172,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(DocumentApproval::class, 'approver_id');
     }
+
+    /**
+     * Get work logs for this user.
+     */
+    public function workLogs()
+    {
+        return $this->hasMany(DocumentWorkLog::class);
+    }
 }

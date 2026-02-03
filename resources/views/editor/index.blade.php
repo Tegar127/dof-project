@@ -5,6 +5,240 @@
 @section('content')
 <div class="flex flex-col lg:flex-row h-screen overflow-hidden bg-gray-100" x-data="editorApp()" x-init="init()">
     
+    <!-- History Modal -->
+    <div x-show="showHistoryModal" x-cloak class="fixed inset-0 z-[80] bg-black/50 flex items-center justify-center p-4">
+        <div @click.away="showHistoryModal = false" class="bg-white rounded-xl shadow-lg max-w-2xl w-full flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-slate-800">Riwayat Dokumen</h3>
+                <button @click="showHistoryModal = false" class="text-slate-400 hover:text-slate-600">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            
+                                    <!-- Tabs -->
+            
+                                    <div class="flex border-b border-gray-100 px-4">
+            
+                                        <button @click="activeHistoryTab = 'status'" :class="activeHistoryTab === 'status' ? 'text-indigo-600 border-indigo-600' : 'text-slate-500 border-transparent hover:text-slate-700'" class="px-4 py-3 font-medium text-sm border-b-2 transition-colors">
+            
+                                            Riwayat Status
+            
+                                        </button>
+            
+                                        <button @click="activeHistoryTab = 'versions'" :class="activeHistoryTab === 'versions' ? 'text-indigo-600 border-indigo-600' : 'text-slate-500 border-transparent hover:text-slate-700'" class="px-4 py-3 font-medium text-sm border-b-2 transition-colors">
+            
+                                            Versi Dokumen
+            
+                                        </button>
+            
+                                        <button @click="activeHistoryTab = 'work'" :class="activeHistoryTab === 'work' ? 'text-indigo-600 border-indigo-600' : 'text-slate-500 border-transparent hover:text-slate-700'" class="px-4 py-3 font-medium text-sm border-b-2 transition-colors">
+            
+                                            Log Pengerjaan
+            
+                                        </button>
+            
+                                    </div>
+            
+                        
+            
+                                    <!-- Content -->
+            
+                                    <div class="p-4 overflow-y-auto flex-1 bg-slate-50">
+            
+                                        
+            
+                                        <!-- Tab: Status -->
+            
+                                        <div x-show="activeHistoryTab === 'status'" class="space-y-4">
+            
+                                             <template x-if="loadingLogs">
+            
+                                                <div class="text-center py-4 text-slate-500">Memuat data...</div>
+            
+                                            </template>
+            
+                                            <template x-if="!loadingLogs && logs.length === 0">
+            
+                                                <div class="text-center py-4 text-slate-500">Belum ada riwayat status.</div>
+            
+                                            </template>
+            
+                                            <div class="relative pl-4 border-l-2 border-indigo-100 space-y-6">
+            
+                                                <template x-for="(log, index) in logs" :key="index">
+            
+                                                    <div class="relative">
+            
+                                                        <div class="absolute -left-[21px] top-1 w-4 h-4 rounded-full border-2 border-white" 
+            
+                                                             :class="index === 0 ? 'bg-indigo-500 ring-4 ring-indigo-50' : 'bg-slate-300'"></div>
+            
+                                                        
+            
+                                                        <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+            
+                                                            <div class="flex justify-between items-start mb-1">
+            
+                                                                <span class="text-xs font-bold text-slate-700" x-text="log.action.toUpperCase().replace('_', ' ')"></span>
+            
+                                                                <span class="text-[10px] text-slate-400" x-text="formatDeadlineDisplay(log.created_at)"></span>
+            
+                                                            </div>
+            
+                                                                                                <p class="text-sm text-slate-600 mb-1" x-text="log.notes"></p>
+            
+                                                                                                
+            
+                                                                                                <!-- Changes Detail -->
+            
+                                                                                                <template x-if="log.changes && log.changes !== 'Penyimpanan otomatis.'">
+            
+                                                                <div class="mt-2 p-3 bg-blue-50/50 border border-blue-100 rounded-lg">
+            
+                                                                    <div class="text-xs font-bold text-blue-700 mb-1 flex items-center gap-1">
+            
+                                                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            
+                                                                        Detail Perubahan
+            
+                                                                    </div>
+            
+                                                                    <p class="text-xs text-slate-600 whitespace-pre-line leading-relaxed italic" x-text="log.changes"></p>
+            
+                                                                </div>
+            
+                                                            </template>
+            
+                        
+            
+                                                            <div class="flex items-center gap-2 mt-2 pt-2 border-t border-slate-50">
+            
+                                                                <div class="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
+            
+                                                                    <span x-text="log.user_name ? log.user_name.charAt(0) : 'S'"></span>
+            
+                                                                </div>
+            
+                                                                <span class="text-xs text-slate-500" x-text="log.user_name"></span>
+            
+                                                            </div>
+            
+                                                        </div>
+            
+                                                    </div>
+            
+                                                </template>
+            
+                                            </div>
+            
+                                        </div>
+            
+                        
+            
+                                        <!-- Tab: Versions -->
+            
+                                        <div x-show="activeHistoryTab === 'versions'" class="space-y-4">
+            
+                                            <template x-if="loadingVersions">
+            
+                                                <div class="text-center py-4 text-slate-500">Memuat data...</div>
+            
+                                            </template>
+            
+                                             <template x-if="!loadingVersions && versions.length === 0">
+            
+                                                <div class="text-center py-4 text-slate-500">Belum ada riwayat versi.</div>
+            
+                                            </template>
+            
+                                            <div class="space-y-3">
+            
+                                                 <template x-for="ver in versions" :key="ver.id">
+            
+                                                    <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+            
+                                                        <div class="flex justify-between items-center mb-2">
+            
+                                                            <div class="flex items-center gap-2">
+            
+                                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100" x-text="'v' + ver.version_number"></span>
+            
+                                                                <span class="text-[10px] text-slate-400" x-text="formatDeadlineDisplay(ver.created_at)"></span>
+            
+                                                            </div>
+            
+                                                            <button 
+            
+                                                                x-show="isEditable()"
+            
+                                                                @click="restoreVersion(ver.id)" 
+            
+                                                                class="text-xs px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded hover:bg-slate-50 hover:text-indigo-600 transition-colors"
+            
+                                                            >
+            
+                                                                Pulihkan
+            
+                                                            </button>
+            
+                                                        </div>
+            
+                                                        <p class="text-xs text-slate-600 italic mb-1 whitespace-pre-line leading-relaxed bg-slate-50 p-2 rounded border border-slate-100" x-text="ver.change_summary || 'Tidak ada detail perubahan.'"></p>
+            
+                                                        <p class="text-[10px] text-slate-400">Diperbarui oleh <span class="font-bold" x-text="ver.updater ? ver.updater.name : 'System'"></span></p>
+            
+                                                    </div>
+            
+                                                 </template>
+            
+                                            </div>
+            
+                                        </div>
+            
+                        
+            
+                                        <!-- Tab: Work Logs -->                <div x-show="activeHistoryTab === 'work'" class="space-y-4">
+                     <template x-if="loadingWorkLogs">
+                        <div class="text-center py-4 text-slate-500">Memuat data...</div>
+                    </template>
+                    <template x-if="!loadingWorkLogs && workLogs.length === 0">
+                        <div class="text-center py-4 text-slate-500">Belum ada log pengerjaan.</div>
+                    </template>
+                    
+                    <div class="space-y-3">
+                         <template x-for="log in workLogs" :key="log.id">
+                            <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-xs font-bold text-slate-700" x-text="log.user ? log.user.name : 'User'"></span>
+                                        <span class="text-xs font-mono bg-slate-100 px-1.5 py-0.5 rounded" x-text="log.duration_minutes + ' mnt'"></span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-400 flex gap-2">
+                                        <span x-text="formatDeadlineDisplay(log.start_time)"></span>
+                                        <span>-</span>
+                                        <span x-text="formatDeadlineDisplay(log.end_time).split(' ').slice(-1)[0]"></span>
+                                    </div>
+                                </div>
+                            </div>
+                         </template>
+                    </div>
+                    
+                    <!-- Total Duration Summary -->
+                     <template x-if="workLogs.length > 0">
+                        <div class="mt-4 p-3 bg-indigo-50 rounded-lg border border-indigo-100 flex justify-between items-center">
+                            <span class="text-sm font-bold text-indigo-800">Total Waktu Pengerjaan</span>
+                            <span class="text-sm font-bold text-indigo-600" x-text="workLogs.reduce((acc, curr) => acc + curr.duration_minutes, 0) + ' Menit'"></span>
+                        </div>
+                    </template>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <!-- Signature Modal -->
     <div x-show="showSignatureModal" x-cloak class="fixed inset-0 z-[80] bg-black/50 flex items-center justify-center p-4">
         <div @click.away="showSignatureModal = false" class="bg-white rounded-xl shadow-lg max-w-lg w-full p-6">
@@ -123,8 +357,8 @@
                     <div x-show="document.target_role === 'group'" class="pl-8">
                         <select x-model="document.target_value" class="w-full p-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                             <option value="">-- Pilih Group --</option>
-                            <template x-for="group in groups" :key="group">
-                                <option :value="group" x-text="group"></option>
+                            <template x-for="group in groups" :key="group.id">
+                                <option :value="group.name" x-text="group.name"></option>
                             </template>
                         </select>
                     </div>
@@ -208,6 +442,16 @@
             </a>
             
             <div class="flex items-center gap-3">
+                <button 
+                    @click="openHistoryModal()" 
+                    class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                    title="Riwayat & Versi"
+                >
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </button>
+
                 <span x-show="saving" class="text-xs text-slate-400">Menyimpan...</span>
                 <button 
                     @click="saveDocument()" 

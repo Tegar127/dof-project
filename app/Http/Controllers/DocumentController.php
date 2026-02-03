@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\DocumentStatus;
 use App\Models\Document;
+use App\Models\DocumentVersion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -69,6 +70,14 @@ class DocumentController extends Controller
             'version' => '1.0',
             'deadline' => $validated['deadline'] ?? null,
             'approval_count' => $validated['approval_count'] ?? 0,
+        ]);
+
+        // Create initial version
+        DocumentVersion::create([
+            'document_id' => $document->id,
+            'version_number' => '1.0',
+            'content_data' => $document->content_data,
+            'updated_by' => $user->id,
         ]);
 
         // Create initial log entry
@@ -179,9 +188,108 @@ class DocumentController extends Controller
             }
         }
 
-        // Increment version if requested
-        if (isset($validated['increment_version']) && $validated['increment_version']) {
-            $document->incrementVersion();
+        // Handle Versioning
+        $shouldVersion = (isset($validated['content_data']) || (isset($validated['increment_version']) && $validated['increment_version']));
+        
+        if ($shouldVersion) {
+            $changeSummary = null;
+
+            // Calculate Diff if content changed
+            if (isset($validated['content_data'])) {
+                // Get previous version's content to compare
+                $lastVersion = $document->versions()->orderBy('created_at', 'desc')->first();
+                $oldContent = $lastVersion ? $lastVersion->content_data : [];
+                $newContent = $validated['content_data'];
+                
+                // Labels mapping
+                $labels = [
+                    'docNumber' => 'Nomor Dokumen',
+                    'to' => 'Kepada',
+                    'from' => 'Dari',
+                    'subject' => 'Perihal',
+                    'content' => 'Isi Paragraf',
+                    'date' => 'Tanggal',
+                    'location' => 'Lokasi',
+                    'attachment' => 'Lampiran',
+                    'signerName' => 'Penandatangan',
+                    'signerPosition' => 'Jabatan',
+                    'division' => 'Divisi',
+                    'weigh' => 'Menimbang',
+                    'task' => 'Tugas',
+                    'destination' => 'Tujuan',
+                    'transport' => 'Transportasi',
+                    'funding' => 'Pembebanan Biaya',
+                    'basis' => 'Dasar',
+                    'remembers' => 'Mengingat',
+                    'ccs' => 'Tembusan'
+                ];
+
+                $diffs = [];
+                foreach ($newContent as $key => $value) {
+                    $label = $labels[$key] ?? $key;
+                    
+                    // Skip internal fields or empty to empty
+                    if (in_array($key, ['signature'])) continue; 
+                    if (empty($oldContent[$key]) && empty($value)) continue;
+
+                    if (!isset($oldContent[$key])) {
+                        if (!empty($value)) {
+                            $val = is_string($value) ? (strlen($value) > 15 ? substr($value, 0, 15).'...' : $value) : '(data)';
+                            $diffs[] = "Isi $label: '$val'";
+                        }
+                    } elseif ($oldContent[$key] !== $value) {
+                        // For arrays (lists), just generic update message
+                        if (is_array($value)) {
+                            $diffs[] = "Update list $label";
+                        } else {
+                            // String comparison
+                            $oldVal = is_string($oldContent[$key]) ? $oldContent[$key] : '';
+                            $newVal = is_string($value) ? $value : '';
+                            
+                            // Truncate for display
+                            $oldDisplay = strlen($oldVal) > 15 ? substr($oldVal, 0, 15).'...' : $oldVal;
+                            $newDisplay = strlen($newVal) > 15 ? substr($newVal, 0, 15).'...' : $newVal;
+                            
+                            if (empty($oldVal)) {
+                                $diffs[] = "Set $label: '$newDisplay'";
+                            } elseif (empty($newVal)) {
+                                $diffs[] = "Hapus $label (sebelumnya '$oldDisplay')";
+                            } else {
+                                $diffs[] = "Ubah $label: '$oldDisplay' ➝ '$newDisplay'";
+                            }
+                        }
+                    }
+                }
+                
+                if (!empty($diffs)) {
+                    $changeSummary = implode("\n", array_slice($diffs, 0, 10)); // Limit to 10 lines
+                    if (count($diffs) > 10) $changeSummary .= "\n... (dan " . (count($diffs) - 10) . " lainnya)";
+                } else {
+                    $changeSummary = 'Penyimpanan otomatis (tidak ada perubahan konten signifikan).';
+                }
+            } else {
+                 $changeSummary = 'Versi baru manual.';
+            }
+
+            // If explicit increment was requested, or just content update (auto patch increment)
+            // We check if version changed in this request (manually passed?) No, it's auto-incremented.
+            // If the user didn't request increment but content changed, we should probably increment patch.
+            
+            if (isset($validated['increment_version']) && $validated['increment_version']) {
+                 $document->incrementVersion();
+            } elseif (isset($validated['content_data'])) {
+                 // Auto-increment patch for content updates if not explicitly requested
+                 $document->incrementVersion();
+            }
+            
+            // Create version record
+            DocumentVersion::create([
+                'document_id' => $document->id,
+                'version_number' => $document->version,
+                'content_data' => $document->content_data,
+                'change_summary' => $changeSummary,
+                'updated_by' => $user->id,
+            ]);
         }
 
         // Determine action for logging
@@ -219,9 +327,9 @@ class DocumentController extends Controller
                 $notes = 'Tujuan dokumen diubah ke ' . ($validated['target']['value'] ?? $document->target_value);
             }
             
-            $document->createLog($action, $user, $notes, $oldStatus, $validated['status'] ?? $oldStatus);
+            $document->createLog($action, $user, $notes, $oldStatus, $validated['status'] ?? $oldStatus, $shouldVersion ? $changeSummary : null);
         } else {
-            $document->createLog($action, $user, $notes);
+            $document->createLog($action, $user, $notes, null, null, $shouldVersion ? $changeSummary : null);
         }
 
         return response()->json([
@@ -258,6 +366,46 @@ class DocumentController extends Controller
         $logs = $document->logs()->with('user')->get();
         
         return response()->json($logs);
+    }
+
+    /**
+     * Get document versions.
+     */
+    public function versions(Document $document)
+    {
+        return response()->json($document->versions()->with('updater')->get());
+    }
+
+    /**
+     * Restore a document version.
+     */
+    public function restoreVersion(Request $request, Document $document, $versionId)
+    {
+        $version = DocumentVersion::where('document_id', $document->id)->findOrFail($versionId);
+        $user = Auth::user();
+
+        $document->update([
+            'content_data' => $version->content_data,
+        ]);
+        
+        // Increment version to indicate a change (restore is a change)
+        $document->incrementVersion();
+
+        // Create a new version record for this restoration state
+        DocumentVersion::create([
+            'document_id' => $document->id,
+            'version_number' => $document->version,
+            'content_data' => $document->content_data,
+            'change_summary' => 'Dipulihkan dari v' . $version->version_number,
+            'updated_by' => $user->id,
+        ]);
+
+        $document->createLog('restored', $user, 'Dokumen dipulihkan ke versi ' . $version->version_number);
+
+        return response()->json([
+            'success' => true,
+            'document' => $document->fresh(),
+        ]);
     }
 
     /**

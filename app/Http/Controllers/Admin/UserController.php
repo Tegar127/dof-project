@@ -14,7 +14,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::all();
+        $users = User::withSum('workLogs', 'duration_minutes')->get();
         return response()->json($users);
     }
 

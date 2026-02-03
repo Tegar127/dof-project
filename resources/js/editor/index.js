@@ -51,7 +51,15 @@ window.editorApp = function () {
         confirmCallback: null,
         groups: [],
         logs: [],
+        versions: [],
+        workLogs: [],
         loadingLogs: false,
+        loadingVersions: false,
+        loadingWorkLogs: false,
+        showVersionsModal: false,
+        showHistoryModal: false, // Unified History Modal
+        activeHistoryTab: 'status', // status, versions, work
+        sessionStartTime: null,
         document: {
             title: '',
             type: 'nota', // Default
@@ -101,10 +109,156 @@ window.editorApp = function () {
 
             if (this.documentId && this.documentId !== 'new') {
                 await this.loadDocument();
-                await this.loadLogs();
+                this.loadLogs(); // No await to parallelize
             } else {
-                // 'new' is no longer supported directly, must create via dashboard
                 window.location.href = '/dashboard';
+            }
+
+            // Start Time Tracking if editable
+            if (this.isEditable()) {
+                this.sessionStartTime = new Date();
+            }
+            
+            // Handle tab close/navigation
+            window.addEventListener('beforeunload', () => {
+                if (this.sessionStartTime) {
+                    this.sendWorkLog(true);
+                }
+            });
+        },
+
+        async openHistoryModal() {
+            this.showHistoryModal = true;
+            this.loadLogs();
+            this.loadVersions();
+            this.loadWorkLogs();
+        },
+
+        get processedLogs() {
+            if (!this.logs) return [];
+            return this.logs.map(log => {
+                // Find version matching the log's version number
+                // Only link if the log action is relevant to content change (optional, but 'version' usually implies content)
+                // or just link by number.
+                const ver = (this.versions || []).find(v => v.version_number == log.version);
+                return { ...log, linkedVersion: ver };
+            });
+        },
+
+        findVersion(log) {
+            if (!this.versions || this.versions.length === 0) return null;
+            return this.versions.find(v => v.version_number == log.version);
+        },
+
+        // Time Tracking
+        async sendWorkLog(isUnload = false) {
+            if (!this.documentId || this.documentId === 'new' || !this.sessionStartTime) return;
+
+            const endTime = new Date();
+            const payload = {
+                start_time: this.sessionStartTime.toISOString(),
+                end_time: endTime.toISOString()
+            };
+
+            const url = `/api/documents/${this.documentId}/work-logs`;
+            
+            if (isUnload) {
+                // Use fetch with keepalive for unloading
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(payload),
+                    keepalive: true
+                });
+            } else {
+                try {
+                    await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + this.token,
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    // Reset timer after successful log
+                    this.sessionStartTime = new Date();
+                } catch (e) {
+                    console.error("Failed to log work time", e);
+                }
+            }
+        },
+
+        async loadWorkLogs() {
+             if (!this.documentId || this.documentId === 'new') return;
+            this.loadingWorkLogs = true;
+            try {
+                const response = await fetch(`/api/documents/${this.documentId}/work-logs`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json'
+                    }
+                });
+                if (response.ok) this.workLogs = await response.json();
+            } catch (e) { console.error(e); }
+            finally { this.loadingWorkLogs = false; }
+        },
+
+        // Versioning
+        async loadVersions() {
+            if (!this.documentId || this.documentId === 'new') return;
+            this.loadingVersions = true;
+            try {
+                const response = await fetch(`/api/documents/${this.documentId}/versions`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json'
+                    }
+                });
+                if (response.ok) this.versions = await response.json();
+            } catch (e) { console.error(e); }
+            finally { this.loadingVersions = false; }
+        },
+
+        async restoreVersion(versionId) {
+            if (!confirm('Apakah Anda yakin ingin mengembalikan dokumen ke versi ini? Perubahan saat ini akan tersimpan sebagai versi baru.')) return;
+
+            try {
+                const response = await fetch(`/api/documents/${this.documentId}/versions/${versionId}/restore`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    this.document = result.document;
+                    // Fix structure if needed
+                    if (this.document.status && typeof this.document.status === 'object' && this.document.status.value) {
+                         this.document.status = this.document.status.value;
+                    }
+                    if (!this.document.content_data || Array.isArray(this.document.content_data)) {
+                        this.document.content_data = {};
+                    }
+                    
+                    this.alertMessage = 'Dokumen berhasil dipulihkan!';
+                    this.showSuccessModal = true;
+                    this.showHistoryModal = false;
+                    
+                    this.loadLogs();
+                    this.loadVersions();
+                    this.loadWorkLogs();
+                }
+            } catch (e) {
+                console.error(e);
+                this.alertMessage = 'Gagal memulihkan versi.';
+                this.showSuccessModal = true;
             }
         },
 
@@ -320,6 +474,9 @@ window.editorApp = function () {
 
                     this.document = result.document || this.document; // Update local state if returned
                     this.documentId = result.id || this.documentId;
+                    
+                    // Log work time
+                    await this.sendWorkLog();
                     
                     // Reload logs after save to show updated history
                     await this.loadLogs();

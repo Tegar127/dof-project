@@ -101,9 +101,25 @@ class Document extends Model
     }
 
     /**
+     * Get work logs for this document.
+     */
+    public function workLogs()
+    {
+        return $this->hasMany(DocumentWorkLog::class)->orderBy('start_time', 'desc');
+    }
+
+    /**
+     * Get versions for this document.
+     */
+    public function versions()
+    {
+        return $this->hasMany(DocumentVersion::class)->orderBy('created_at', 'desc');
+    }
+
+    /**
      * Create a log entry for this document.
      */
-    public function createLog($action, $user, $notes = null, $statusFrom = null, $statusTo = null)
+    public function createLog($action, $user, $notes = null, $statusFrom = null, $statusTo = null, $changes = null)
     {
         return $this->logs()->create([
             'version' => $this->version ?? '1.0',
@@ -114,6 +130,7 @@ class Document extends Model
             'status_from' => $statusFrom,
             'status_to' => $statusTo,
             'notes' => $notes,
+            'changes' => $changes,
             'metadata' => ['group' => $user->group_name ?? null],
             'created_at' => now(),
         ]);
