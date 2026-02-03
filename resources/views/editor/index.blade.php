@@ -25,12 +25,6 @@
             
                                         </button>
             
-                                        <button @click="activeHistoryTab = 'versions'" :class="activeHistoryTab === 'versions' ? 'text-indigo-600 border-indigo-600' : 'text-slate-500 border-transparent hover:text-slate-700'" class="px-4 py-3 font-medium text-sm border-b-2 transition-colors">
-            
-                                            Versi Dokumen
-            
-                                        </button>
-            
                                         <button @click="activeHistoryTab = 'work'" :class="activeHistoryTab === 'work' ? 'text-indigo-600 border-indigo-600' : 'text-slate-500 border-transparent hover:text-slate-700'" class="px-4 py-3 font-medium text-sm border-b-2 transition-colors">
             
                                             Log Pengerjaan
@@ -128,68 +122,6 @@
                                                     </div>
             
                                                 </template>
-            
-                                            </div>
-            
-                                        </div>
-            
-                        
-            
-                                        <!-- Tab: Versions -->
-            
-                                        <div x-show="activeHistoryTab === 'versions'" class="space-y-4">
-            
-                                            <template x-if="loadingVersions">
-            
-                                                <div class="text-center py-4 text-slate-500">Memuat data...</div>
-            
-                                            </template>
-            
-                                             <template x-if="!loadingVersions && versions.length === 0">
-            
-                                                <div class="text-center py-4 text-slate-500">Belum ada riwayat versi.</div>
-            
-                                            </template>
-            
-                                            <div class="space-y-3">
-            
-                                                 <template x-for="ver in versions" :key="ver.id">
-            
-                                                    <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-            
-                                                        <div class="flex justify-between items-center mb-2">
-            
-                                                            <div class="flex items-center gap-2">
-            
-                                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100" x-text="'v' + ver.version_number"></span>
-            
-                                                                <span class="text-[10px] text-slate-400" x-text="formatDeadlineDisplay(ver.created_at)"></span>
-            
-                                                            </div>
-            
-                                                            <button 
-            
-                                                                x-show="isEditable()"
-            
-                                                                @click="restoreVersion(ver.id)" 
-            
-                                                                class="text-xs px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded hover:bg-slate-50 hover:text-indigo-600 transition-colors"
-            
-                                                            >
-            
-                                                                Pulihkan
-            
-                                                            </button>
-            
-                                                        </div>
-            
-                                                        <p class="text-xs text-slate-600 italic mb-1 whitespace-pre-line leading-relaxed bg-slate-50 p-2 rounded border border-slate-100" x-text="ver.change_summary || 'Tidak ada detail perubahan.'"></p>
-            
-                                                        <p class="text-[10px] text-slate-400">Diperbarui oleh <span class="font-bold" x-text="ver.updater ? ver.updater.name : 'System'"></span></p>
-            
-                                                    </div>
-            
-                                                 </template>
             
                                             </div>
             
