@@ -243,10 +243,50 @@
     <div x-show="showSignatureModal" x-cloak class="fixed inset-0 z-[80] bg-black/50 flex items-center justify-center p-4">
         <div @click.away="showSignatureModal = false" class="bg-white rounded-xl shadow-lg max-w-lg w-full p-6">
             <h3 class="text-xl font-bold mb-4 text-slate-800">Tanda Tangan Digital</h3>
+
+            <!-- Tabs -->
+            <div class="flex border-b border-gray-200 mb-4">
+                <button 
+                    @click="signatureTab = 'draw'"
+                    :class="{'border-b-2 border-indigo-600 text-indigo-600': signatureTab === 'draw', 'text-gray-500 hover:text-gray-700': signatureTab !== 'draw'}"
+                    class="flex-1 py-2 text-sm font-medium transition-colors focus:outline-none"
+                >
+                    Gambar Manual
+                </button>
+                <button 
+                    @click="signatureTab = 'upload'"
+                    :class="{'border-b-2 border-indigo-600 text-indigo-600': signatureTab === 'upload', 'text-gray-500 hover:text-gray-700': signatureTab !== 'upload'}"
+                    class="flex-1 py-2 text-sm font-medium transition-colors focus:outline-none"
+                >
+                    Upload Gambar
+                </button>
+            </div>
             
-            <div class="border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 relative h-64 w-full mb-4 overflow-hidden touch-none">
+            <div x-show="signatureTab === 'draw'" class="border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 relative h-64 w-full mb-4 overflow-hidden touch-none">
                 <canvas id="signature-canvas" class="absolute inset-0 w-full h-full cursor-crosshair"></canvas>
                 <div class="absolute bottom-2 right-2 text-xs text-gray-400 pointer-events-none">Area Tanda Tangan</div>
+            </div>
+
+            <div x-show="signatureTab === 'upload'" class="border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 relative h-64 w-full mb-4 flex flex-col items-center justify-center p-4">
+                <template x-if="!uploadedSignatureData">
+                    <div class="text-center w-full">
+                        <svg class="w-10 h-10 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <p class="text-sm text-gray-500 mb-4">Upload gambar tanda tangan (PNG/JPG)</p>
+                        <input type="file" id="signature-upload-input" @change="handleSignatureUpload($event)" accept="image/*" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer text-center mx-auto">
+                    </div>
+                </template>
+                <template x-if="uploadedSignatureData">
+                    <div class="relative w-full h-full flex items-center justify-center group">
+                         <img :src="uploadedSignatureData" class="max-w-full max-h-full object-contain">
+                         <div class="absolute inset-0 bg-black/10 hidden group-hover:flex items-center justify-center">
+                             <button @click="uploadedSignatureData = null; document.getElementById('signature-upload-input').value = ''" class="bg-white text-red-500 p-2 rounded-full shadow-lg hover:bg-red-50 transition-colors">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                             </button>
+                         </div>
+                    </div>
+                </template>
             </div>
 
             <div class="flex gap-3">

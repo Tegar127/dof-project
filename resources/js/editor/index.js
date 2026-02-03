@@ -44,6 +44,8 @@ window.editorApp = function () {
         showSuccessModal: false,
         showConfirmModal: false,
         showSignatureModal: false,
+        signatureTab: 'draw',
+        uploadedSignatureData: null,
         signaturePad: null,
         alertMessage: '',
         confirmTitle: '',
@@ -264,6 +266,9 @@ window.editorApp = function () {
 
         initSignaturePad() {
             this.showSignatureModal = true;
+            this.signatureTab = 'draw';
+            this.uploadedSignatureData = null;
+
             this.$nextTick(() => {
                 const canvas = document.getElementById('signature-canvas');
                 if (canvas) {
@@ -281,15 +286,48 @@ window.editorApp = function () {
             });
         },
 
+        handleSignatureUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.size > 2 * 1024 * 1024) { // 2MB limit
+                this.alertMessage = 'Ukuran gambar terlalu besar (maks 2MB)';
+                this.showSuccessModal = true;
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.uploadedSignatureData = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        },
+
         clearSignature() {
-            if (this.signaturePad) {
+            if (this.signatureTab === 'draw' && this.signaturePad) {
                 this.signaturePad.clear();
+            } else if (this.signatureTab === 'upload') {
+                this.uploadedSignatureData = null;
+                // Reset input
+                const input = document.getElementById('signature-upload-input');
+                if (input) input.value = '';
             }
         },
 
         saveSignature() {
-            if (this.signaturePad && !this.signaturePad.isEmpty()) {
-                const data = this.signaturePad.toDataURL('image/png');
+            let data = null;
+
+            if (this.signatureTab === 'draw') {
+                if (this.signaturePad && !this.signaturePad.isEmpty()) {
+                    data = this.signaturePad.toDataURL('image/png');
+                }
+            } else if (this.signatureTab === 'upload') {
+                if (this.uploadedSignatureData) {
+                    data = this.uploadedSignatureData;
+                }
+            }
+
+            if (data) {
                 this.document.content_data.signature = data;
                 this.showSignatureModal = false;
             } else {
