@@ -15,6 +15,10 @@ window.dashboardApp = function () {
         showSuccessModal: false,
         alertMessage: '',
         folders: [],
+        
+        // Notifications
+        notifications: [],
+        showNotifications: false,
 
         async init() {
             // Check for success messages in URL
@@ -48,9 +52,10 @@ window.dashboardApp = function () {
             // Refresh user data (await to ensure role is up to date)
             await this.refreshUserData();
 
-            // Load documents
+            // Load data
             await this.loadDocuments();
             await this.loadFolders();
+            await this.loadNotifications();
             await this.autoOrganize();
 
             // Watch filters
@@ -66,6 +71,56 @@ window.dashboardApp = function () {
             window.addEventListener('document-moved', () => {
                 this.loadDocuments();
             });
+            
+            // Poll for notifications every minute
+            setInterval(() => this.loadNotifications(), 60000);
+        },
+
+        async loadNotifications() {
+            try {
+                const response = await fetch('/api/notifications', {
+                    headers: {
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    this.notifications = await response.json();
+                }
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+            }
+        },
+
+        async markAsRead(id) {
+            try {
+                await fetch(`/api/notifications/${id}/read`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json'
+                    }
+                });
+                await this.loadNotifications();
+            } catch (error) {
+                console.error('Error marking notification as read:', error);
+            }
+        },
+
+        async markAllAsRead() {
+            try {
+                await fetch(`/api/notifications/read-all`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json'
+                    }
+                });
+                await this.loadNotifications();
+            } catch (error) {
+                console.error('Error marking all notifications as read:', error);
+            }
         },
 
         async refreshUserData() {

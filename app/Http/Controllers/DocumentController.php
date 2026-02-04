@@ -449,6 +449,23 @@ class DocumentController extends Controller
             ], 403);
         }
 
+        // If Admin is deleting, notify the author
+        if ($user->isAdmin() && $document->author_id !== $user->id) {
+            try {
+                $reason = request()->input('reason');
+                if (empty($reason)) {
+                    $reason = 'Tidak ada alasan yang diberikan.';
+                }
+                
+                if ($document->author) {
+                    $document->author->notify(new \App\Notifications\DocumentDeletedNotification($document->title, $reason));
+                }
+            } catch (\Exception $e) {
+                // Log error but continue with deletion
+                \Illuminate\Support\Facades\Log::error('Failed to send document deletion notification: ' . $e->getMessage());
+            }
+        }
+
         $document->delete();
 
         return response()->json([

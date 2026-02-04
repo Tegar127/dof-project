@@ -109,15 +109,85 @@
                 <p class="text-blue-100 mt-2 text-lg">Kelola dokumen dinas anda dengan mudah dan cepat.</p>
             </div>
 
-            <button
-                @click="handleLogout()"
-                class="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md px-4 py-2.5 rounded-xl text-sm font-medium transition-all border border-white/10 flex items-center gap-2"
-            >
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                Sign Out
-            </button>
+            <div class="flex items-center gap-4">
+                <!-- Notifications -->
+                <div class="relative">
+                    <button 
+                        @click="showNotifications = !showNotifications"
+                        class="relative bg-white/10 hover:bg-white/20 text-white backdrop-blur-md p-2.5 rounded-xl transition-all border border-white/10"
+                    >
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        <div x-show="notifications.length > 0" class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border border-slate-900"></div>
+                    </button>
+
+                    <!-- Dropdown -->
+                    <div 
+                        x-show="showNotifications" 
+                        @click.away="showNotifications = false"
+                        x-transition
+                        class="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-50 origin-top-right text-slate-800"
+                        style="display: none;"
+                    >
+                        <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                            <h3 class="font-bold text-sm">Notifikasi</h3>
+                            <button 
+                                x-show="notifications.length > 0"
+                                @click="markAllAsRead()"
+                                class="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                            >
+                                Tandai semua dibaca
+                            </button>
+                        </div>
+                        <div class="max-h-96 overflow-y-auto">
+                            <template x-if="notifications.length === 0">
+                                <div class="p-8 text-center text-slate-400 text-sm">
+                                    Tidak ada notifikasi baru
+                                </div>
+                            </template>
+                            <template x-for="notif in notifications" :key="notif.id">
+                                <div 
+                                    @click="markAsRead(notif.id)"
+                                    class="p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer relative group"
+                                >
+                                    <div class="flex gap-3">
+                                        <div class="flex-shrink-0 mt-1">
+                                            <div class="w-8 h-8 rounded-full flex items-center justify-center" 
+                                                 :class="notif.data.type === 'danger' ? 'bg-red-100 text-red-600' : 'bg-indigo-100 text-indigo-600'">
+                                                <svg x-show="notif.data.type === 'danger'" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                                <svg x-show="notif.data.type !== 'danger'" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-semibold text-slate-800" x-text="notif.data.title"></p>
+                                            <p class="text-xs text-slate-600 mt-1" x-text="notif.data.message"></p>
+                                            <div x-show="notif.data.reason" class="mt-2 p-2 bg-slate-100 rounded text-xs text-slate-600 italic">
+                                                "<span x-text="notif.data.reason"></span>"
+                                            </div>
+                                            <p class="text-[10px] text-slate-400 mt-2" x-text="new Date(notif.created_at).toLocaleString('id-ID')"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <button
+                    @click="handleLogout()"
+                    class="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md px-4 py-2.5 rounded-xl text-sm font-medium transition-all border border-white/10 flex items-center gap-2"
+                >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Sign Out
+                </button>
+            </div>
         </div>
 
         <!-- Quick Actions & Stats -->

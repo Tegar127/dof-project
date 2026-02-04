@@ -7,6 +7,7 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentApprovalController;
 use App\Http\Controllers\DocumentWorkLogController;
 use App\Http\Controllers\FolderController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -28,6 +29,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth routes
     Route::post('/logout', [LoginController::class, 'logout']);
     Route::get('/user', [LoginController::class, 'user']);
+    
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 
     // Document routes (all authenticated users)
     Route::apiResource('documents', DocumentController::class);
