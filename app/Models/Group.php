@@ -15,4 +15,12 @@ class Group extends Model
     {
         return $this->hasMany(User::class, 'group_name', 'name');
     }
+
+    /**
+     * Get the users who are members of this group (via pivot).
+     */
+    public function members()
+    {
+        return $this->belongsToMany(User::class);
+    }
 }

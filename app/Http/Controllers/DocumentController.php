@@ -112,13 +112,16 @@ class DocumentController extends Controller
         // Mark document as read
         $document->markAsRead($user);
 
+        // Get all groups user belongs to
+        $groupNames = $user->groups()->pluck('name')->push($user->group_name)->filter()->unique()->toArray();
+
         // If opened by receiver group member and status is 'sent', update to 'received'
         if ($document->status === DocumentStatus::SENT && 
             $document->target_role === 'group' && 
-            $document->target_value === $user->group_name) {
+            in_array($document->target_value, $groupNames)) {
             $oldStatus = $document->status;
             $document->update(['status' => DocumentStatus::RECEIVED]);
-            $document->createLog('received', $user, 'Dokumen diterima oleh ' . $user->group_name, $oldStatus, DocumentStatus::RECEIVED);
+            $document->createLog('received', $user, 'Dokumen diterima oleh ' . $document->target_value, $oldStatus, DocumentStatus::RECEIVED);
         }
 
         $document->load(['author', 'logs', 'approvals.approver', 'readReceipts.user', 'folder']);

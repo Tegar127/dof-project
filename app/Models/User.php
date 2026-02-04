@@ -174,6 +174,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the groups this user belongs to.
+     */
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class);
+    }
+
+    /**
      * Get work logs for this user.
      */
     public function workLogs()

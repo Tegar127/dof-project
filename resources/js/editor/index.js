@@ -47,6 +47,7 @@ window.editorApp = function () {
         signatureTab: 'draw',
         uploadedSignatureData: null,
         signaturePad: null,
+        activeSignatureField: 'signature', // Default to main signature
         alertMessage: '',
         confirmTitle: '',
         confirmMessage: '',
@@ -82,6 +83,7 @@ window.editorApp = function () {
                 date: '',
                 division: '',
                 signerPosition: '', signerName: '', signature: '',
+                bdMliSignature: '', // New field for BD-MLI
                 // SPPD
                 weigh: '',
                 remembers: [''],
@@ -264,7 +266,8 @@ window.editorApp = function () {
             }
         },
 
-        initSignaturePad() {
+        initSignaturePad(field = 'signature') {
+            this.activeSignatureField = field;
             this.showSignatureModal = true;
             this.signatureTab = 'draw';
             this.uploadedSignatureData = null;
@@ -328,7 +331,7 @@ window.editorApp = function () {
             }
 
             if (data) {
-                this.document.content_data.signature = data;
+                this.document.content_data[this.activeSignatureField] = data;
                 this.showSignatureModal = false;
             } else {
                 this.alertMessage = 'Tanda tangan masih kosong!';
@@ -336,8 +339,8 @@ window.editorApp = function () {
             }
         },
 
-        removeSignature() {
-            this.document.content_data.signature = '';
+        removeSignature(field = 'signature') {
+            this.document.content_data[field] = '';
         },
 
         async loadGroups() {

@@ -38,6 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Document routes (all authenticated users)
     Route::apiResource('documents', DocumentController::class);
     Route::get('/groups', [GroupController::class, 'index']);
+    Route::get('/groups/{group}', [GroupController::class, 'show']);
     
     // Document logs
     Route::get('/documents/{id}/logs', [DocumentController::class, 'logs']);
@@ -59,7 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Admin only routes
     Route::middleware('role:admin')->group(function () {
         Route::apiResource('users', UserController::class);
-        Route::post('/groups', [GroupController::class, 'store']);
-        Route::get('/groups/{id}/stats', [GroupController::class, 'showStats']);
+        Route::apiResource('groups', GroupController::class)->except(['index', 'show']);
+        Route::get('/groups-stats/{id}', [GroupController::class, 'showStats']);
     });
 });

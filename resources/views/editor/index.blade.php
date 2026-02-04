@@ -581,54 +581,90 @@
                             </div>
                             
                             <!-- Section: Footer / Signature -->
-                            <div class="space-y-4 pt-2">
-                                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                                    <span class="w-1 h-4 bg-indigo-500 rounded-full"></span>
-                                    Penutup & Tanda Tangan
-                                </h3>
-                                
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div class="space-y-1">
-                                        <label class="text-xs text-slate-500 font-medium ml-1">Lokasi</label>
-                                        <input type="text" x-model="document.content_data.location" class="form-input-styled" placeholder="Jakarta">
-                                    </div>
-                                    <div class="space-y-1">
-                                        <label class="text-xs text-slate-500 font-medium ml-1">Tanggal</label>
-                                        <input type="date" x-model="document.content_data.date" class="form-input-styled">
-                                    </div>
-                                </div>
-
-                                <div class="space-y-1">
-                                    <label class="text-xs text-slate-500 font-medium ml-1">Jabatan Penandatangan</label>
-                                    <input type="text" x-model="document.content_data.signerPosition" class="form-input-styled" placeholder="Contoh: KEPALA DIVISI...">
-                                </div>
-                                
-                                <div class="space-y-1">
-                                    <label class="text-xs text-slate-500 font-medium ml-1">Nama Divisi</label>
-                                    <input type="text" x-model="document.content_data.division" class="form-input-styled" placeholder="Contoh: DIVISI TEKNOLOGI...">
-                                </div>
-
-                                <div class="space-y-1">
-                                    <label class="text-xs text-slate-500 font-medium ml-1">Nama Lengkap</label>
-                                    <input type="text" x-model="document.content_data.signerName" class="form-input-styled font-bold" placeholder="Nama Penandatangan">
-                                </div>
-                                
-                                <div class="pt-2">
-                                    <template x-if="!document.content_data.signature">
-                                        <button @click="initSignaturePad()" class="w-full py-2 border border-dashed border-indigo-300 text-indigo-600 text-xs font-bold rounded-lg hover:bg-indigo-50 transition-all flex items-center justify-center gap-2">
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                                            BUAT TANDA TANGAN
-                                        </button>
-                                    </template>
-                                    <template x-if="document.content_data.signature">
-                                        <div class="relative group border border-slate-200 rounded-lg p-2 bg-slate-50 text-center">
-                                            <img :src="document.content_data.signature" alt="Signature" class="h-16 mx-auto object-contain">
-                                            <button @click="removeSignature()" class="absolute top-1 right-1 bg-white text-red-500 rounded-full p-1 shadow hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all">
-                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                            <div class="space-y-6 pt-2">
+                                <!-- BD-MLI Signature Section (MUST BE FIRST) -->
+                                <div class="space-y-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                        <span class="w-1 h-4 bg-emerald-500 rounded-full"></span>
+                                        Paraf BD-MLI (Wajib diisi pertama)
+                                    </h3>
+                                    
+                                    <div class="pt-2">
+                                        <template x-if="!document.content_data.bdMliSignature">
+                                            <button @click="initSignaturePad('bdMliSignature')" class="w-full py-2 border border-dashed border-emerald-300 text-emerald-600 text-xs font-bold rounded-lg hover:bg-emerald-50 transition-all flex items-center justify-center gap-2">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                                BUAT PARAF BD-MLI
                                             </button>
-                                            <p class="text-[10px] text-slate-400 mt-1">Klik hapus untuk ulang</p>
+                                        </template>
+                                        <template x-if="document.content_data.bdMliSignature">
+                                            <div class="relative group border border-emerald-200 rounded-lg p-2 bg-white text-center">
+                                                <img :src="document.content_data.bdMliSignature" alt="Signature" class="h-16 mx-auto object-contain">
+                                                <button @click="removeSignature('bdMliSignature')" class="absolute top-1 right-1 bg-white text-red-500 rounded-full p-1 shadow hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all">
+                                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                                </button>
+                                                <p class="text-[10px] text-emerald-400 mt-1">Klik hapus untuk ulang</p>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <!-- Main Signature Section (Locked until BD-MLI is done) -->
+                                <div class="space-y-4 pt-2 transition-all duration-300" :class="!document.content_data.bdMliSignature ? 'opacity-40 grayscale pointer-events-none select-none' : ''">
+                                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                        <span class="w-1 h-4 bg-indigo-500 rounded-full"></span>
+                                        Penutup & Tanda Tangan
+                                    </h3>
+
+                                    <template x-if="!document.content_data.bdMliSignature">
+                                        <div class="text-[10px] text-amber-600 font-bold bg-amber-50 p-2 rounded border border-amber-100 flex items-center gap-2">
+                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                            Lengkapi Paraf BD-MLI di atas untuk membuka bagian ini.
                                         </div>
                                     </template>
+                                    
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div class="space-y-1">
+                                            <label class="text-xs text-slate-500 font-medium ml-1">Lokasi</label>
+                                            <input type="text" x-model="document.content_data.location" class="form-input-styled" placeholder="Jakarta" :disabled="!document.content_data.bdMliSignature">
+                                        </div>
+                                        <div class="space-y-1">
+                                            <label class="text-xs text-slate-500 font-medium ml-1">Tanggal</label>
+                                            <input type="date" x-model="document.content_data.date" class="form-input-styled" :disabled="!document.content_data.bdMliSignature">
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-1">
+                                        <label class="text-xs text-slate-500 font-medium ml-1">Jabatan Penandatangan</label>
+                                        <input type="text" x-model="document.content_data.signerPosition" class="form-input-styled" placeholder="Contoh: KEPALA DIVISI..." :disabled="!document.content_data.bdMliSignature">
+                                    </div>
+                                    
+                                    <div class="space-y-1">
+                                        <label class="text-xs text-slate-500 font-medium ml-1">Nama Divisi</label>
+                                        <input type="text" x-model="document.content_data.division" class="form-input-styled" placeholder="Contoh: DIVISI TEKNOLOGI..." :disabled="!document.content_data.bdMliSignature">
+                                    </div>
+
+                                    <div class="space-y-1">
+                                        <label class="text-xs text-slate-500 font-medium ml-1">Nama Lengkap</label>
+                                        <input type="text" x-model="document.content_data.signerName" class="form-input-styled font-bold" placeholder="Nama Penandatangan" :disabled="!document.content_data.bdMliSignature">
+                                    </div>
+                                    
+                                    <div class="pt-2">
+                                        <template x-if="!document.content_data.signature">
+                                            <button @click="initSignaturePad('signature')" :disabled="!document.content_data.bdMliSignature" class="w-full py-2 border border-dashed border-indigo-300 text-indigo-600 text-xs font-bold rounded-lg hover:bg-indigo-50 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                                BUAT TANDA TANGAN
+                                            </button>
+                                        </template>
+                                        <template x-if="document.content_data.signature">
+                                            <div class="relative group border border-slate-200 rounded-lg p-2 bg-slate-50 text-center">
+                                                <img :src="document.content_data.signature" alt="Signature" class="h-16 mx-auto object-contain">
+                                                <button @click="removeSignature('signature')" class="absolute top-1 right-1 bg-white text-red-500 rounded-full p-1 shadow hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all">
+                                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                                </button>
+                                                <p class="text-[10px] text-slate-400 mt-1">Klik hapus untuk ulang</p>
+                                            </div>
+                                        </template>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1082,7 +1118,11 @@
                     <table class="paraf-box">
                         <tr><td colspan="2" class="text-center font-bold" style="background-color: #f3f4f6 !important;">BD-MLI</td></tr>
                         <tr><td rowspan="2" class="text-center align-middle" width="50%">Paraf</td><td class="text-center">Staff</td></tr>
-                        <tr><td class="text-center" height="30"> </td></tr>
+                        <tr><td class="text-center h-12 align-middle">
+                            <template x-if="document.content_data.bdMliSignature">
+                                <img :src="document.content_data.bdMliSignature" style="max-height: 40px; margin: 0 auto; display: block;">
+                            </template>
+                        </td></tr>
                     </table>
                 </div>
             </template>

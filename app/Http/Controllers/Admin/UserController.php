@@ -14,7 +14,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::withSum('workLogs', 'duration_minutes')->get();
+        $users = User::with(['groups'])->withSum('workLogs', 'duration_minutes')->get();
         return response()->json($users);
     }
 
@@ -30,15 +30,21 @@ class UserController extends Controller
             'role' => 'required|in:admin,user,reviewer',
             'group_name' => 'nullable|string',
             'position' => 'nullable|in:direksi,kadiv,kabid,staff',
+            'extra_groups' => 'nullable|array',
+            'extra_groups.*' => 'exists:groups,id'
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
 
         $user = User::create($validated);
+        
+        if (!empty($validated['extra_groups'])) {
+            $user->groups()->sync($validated['extra_groups']);
+        }
 
         return response()->json([
             'success' => true,
-            'user' => $user,
+            'user' => $user->load('groups'),
         ], 201);
     }
 
@@ -47,7 +53,7 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        return response()->json($user);
+        return response()->json($user->load('groups'));
     }
 
     /**
@@ -62,6 +68,8 @@ class UserController extends Controller
             'role' => 'sometimes|in:admin,user,reviewer',
             'group_name' => 'nullable|string',
             'position' => 'nullable|in:direksi,kadiv,kabid,staff',
+            'extra_groups' => 'nullable|array',
+            'extra_groups.*' => 'exists:groups,id'
         ]);
 
         if (isset($validated['password'])) {
@@ -70,9 +78,13 @@ class UserController extends Controller
 
         $user->update($validated);
 
+        if ($request->has('extra_groups')) {
+            $user->groups()->sync($validated['extra_groups']);
+        }
+
         return response()->json([
             'success' => true,
-            'user' => $user,
+            'user' => $user->load('groups'),
         ]);
     }
 

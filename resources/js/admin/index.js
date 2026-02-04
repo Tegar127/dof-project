@@ -1,10 +1,9 @@
 window.adminApp = function() {
     return {
         activeTab: 'users',
+        showForm: false, // Replaces modals
         users: [],
         groups: [],
-        showUserModal: false,
-        showGroupModal: false,
         
         // Group View State (Master-Detail)
         groupViewMode: 'list', // 'list' or 'details'
@@ -23,7 +22,8 @@ window.adminApp = function() {
         deleteReason: '',
 
         editingUser: null,
-        userForm: {},
+        editingGroup: null,
+        userForm: { extra_groups: [] },
         groupForm: { invited_users: [], is_private: false },
         token: null,
         notification: {
@@ -61,19 +61,13 @@ window.adminApp = function() {
         },
 
         openDeleteModal(docId, docTitle) {
-            console.log('Opening delete modal for:', docId, docTitle);
             this.docToDelete = { id: docId, title: docTitle };
             this.deleteReason = '';
             this.showDeleteModal = true;
         },
 
         async confirmDelete() {
-            if (!this.docToDelete) {
-                console.error('No document selected to delete');
-                return;
-            }
-
-            console.log('Confirming delete for document ID:', this.docToDelete.id);
+            if (!this.docToDelete) return;
 
             try {
                 const response = await fetch(`/api/documents/${this.docToDelete.id}`, {
@@ -89,33 +83,28 @@ window.adminApp = function() {
                 if (response.ok) {
                     this.showNotification('Document deleted successfully');
                     this.showDeleteModal = false;
-                    
-                    const deletedId = this.docToDelete.id;
                     this.docToDelete = null;
 
-                    // Refresh current view
                     if (this.selectedGroup) {
                         await this.loadGroupDetails(this.selectedGroup.group.id);
                     }
                 } else {
                     const data = await response.json();
-                    console.error('Delete failed:', data);
                     this.showNotification(data.message || 'Error deleting document', 'error');
                 }
             } catch (error) {
-                console.error('Error during document deletion:', error);
                 this.showNotification('Error deleting document', 'error');
             }
         },
 
         async loadGroupDetails(groupId) {
             this.loadingGroupDetails = true;
-            this.groupViewMode = 'details'; // Switch to details view
-            this.selectedGroup = null; // Clear previous
-            this.closeDocumentHistory(); // Reset history view
+            this.groupViewMode = 'details'; 
+            this.selectedGroup = null; 
+            this.closeDocumentHistory(); 
             
             try {
-                const response = await fetch(`/api/groups/${groupId}/stats`, {
+                const response = await fetch(`/api/groups-stats/${groupId}`, {
                     headers: { 
                         'Authorization': 'Bearer ' + this.token,
                         'Accept': 'application/json' 
@@ -125,12 +114,11 @@ window.adminApp = function() {
                     this.selectedGroup = await response.json();
                 } else {
                     this.showNotification('Error loading group details', 'error');
-                    this.groupViewMode = 'list'; // Revert on error
+                    this.groupViewMode = 'list';
                 }
             } catch (error) {
-                console.error('Error loading group details:', error);
                 this.showNotification('Error loading group details', 'error');
-                this.groupViewMode = 'list'; // Revert on error
+                this.groupViewMode = 'list';
             } finally {
                 this.loadingGroupDetails = false;
             }
@@ -161,7 +149,6 @@ window.adminApp = function() {
                     this.showNotification('Error loading document versions', 'error');
                 }
             } catch (error) {
-                console.error('Error loading versions:', error);
                 this.showNotification('Error loading versions', 'error');
             } finally {
                 this.loadingVersions = false;
@@ -195,7 +182,6 @@ window.adminApp = function() {
                     this.users = await response.json();
                 }
             } catch (error) {
-                console.error('Error loading users:', error);
                 this.showNotification('Error loading users', 'error');
             }
         },
@@ -212,15 +198,38 @@ window.adminApp = function() {
                     this.groups = await response.json();
                 }
             } catch (error) {
-                console.error('Error loading groups:', error);
                 this.showNotification('Error loading groups', 'error');
             }
         },
 
+        cancelForm() {
+            this.showForm = false;
+            this.editingUser = null;
+            this.editingGroup = null;
+            this.userForm = { extra_groups: [] };
+            this.groupForm = { invited_users: [], is_private: false };
+        },
+
+        editUser(user) {
+            this.editingUser = user.id;
+            this.userForm = {
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                group_name: user.group_name,
+                position: user.position,
+                extra_groups: user.groups ? user.groups.map(g => g.id) : []
+            };
+            this.showForm = true;
+        },
+
         async saveUser() {
             try {
-                const response = await fetch('/api/users', {
-                    method: 'POST',
+                const method = this.editingUser ? 'PUT' : 'POST';
+                const url = this.editingUser ? `/api/users/${this.editingUser}` : '/api/users';
+                
+                const response = await fetch(url, {
+                    method: method,
                     headers: {
                         'Authorization': 'Bearer ' + this.token,
                         'Content-Type': 'application/json',
@@ -231,15 +240,13 @@ window.adminApp = function() {
 
                 if (response.ok) {
                     await this.loadUsers();
-                    this.showUserModal = false;
-                    this.userForm = {};
+                    this.cancelForm();
                     this.showNotification('User saved successfully');
                 } else {
                     const data = await response.json();
                     this.showNotification(data.message || 'Error saving user', 'error');
                 }
             } catch (error) {
-                console.error('Error saving user:', error);
                 this.showNotification('An unexpected error occurred.', 'error');
             }
         },
@@ -258,20 +265,33 @@ window.adminApp = function() {
 
                 if (response.ok) {
                     await this.loadUsers();
-                    alert('User deleted successfully');
+                    this.showNotification('User deleted successfully');
                 } else {
                     this.showNotification('Error deleting user', 'error');
                 }
             } catch (error) {
-                console.error('Error deleting user:', error);
                 this.showNotification('Error deleting user', 'error');
             }
         },
 
+        editGroup(group) {
+            this.editingGroup = group.id;
+            this.groupForm = {
+                name: group.name,
+                is_private: !!group.is_private,
+                invited_users: [] // We'll need to load members if needed, but for now empty
+            };
+            // Optional: load members for the form
+            this.showForm = true;
+        },
+
         async saveGroup() {
             try {
-                const response = await fetch('/api/groups', {
-                    method: 'POST',
+                const method = this.editingGroup ? 'PUT' : 'POST';
+                const url = this.editingGroup ? `/api/groups/${this.editingGroup}` : '/api/groups';
+                
+                const response = await fetch(url, {
+                    method: method,
                     headers: {
                         'Authorization': 'Bearer ' + this.token,
                         'Content-Type': 'application/json',
@@ -282,16 +302,35 @@ window.adminApp = function() {
 
                 if (response.ok) {
                     await this.loadGroups();
-                    this.showGroupModal = false;
-                    this.groupForm = {};
+                    this.cancelForm();
                     this.showNotification('Group saved successfully');
                 } else {
                     const data = await response.json();
                     this.showNotification(data.message || 'Error saving group', 'error');
                 }
             } catch (error) {
-                console.error('Error saving group:', error);
                 this.showNotification('An unexpected error occurred.', 'error');
+            }
+        },
+
+        async deleteGroup(groupId) {
+            if (!confirm('Are you sure you want to delete this group?')) return;
+            try {
+                const response = await fetch(`/api/groups/${groupId}`, {
+                    method: 'DELETE',
+                    headers: { 
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json' 
+                    }
+                });
+                if (response.ok) {
+                    await this.loadGroups();
+                    this.showNotification('Group deleted successfully');
+                } else {
+                    this.showNotification('Error deleting group', 'error');
+                }
+            } catch (error) {
+                this.showNotification('Error deleting group', 'error');
             }
         },
 

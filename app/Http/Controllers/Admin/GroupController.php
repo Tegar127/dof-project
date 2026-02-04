@@ -22,8 +22,14 @@ class GroupController extends Controller
 
         if ($user && !$user->isAdmin()) {
             $query->where(function($q) use ($user) {
+                // User sees public groups
                 $q->where('is_private', false)
-                  ->orWhere('name', $user->group_name);
+                  // OR groups where they are the primary member
+                  ->orWhere('name', $user->group_name)
+                  // OR groups where they are a member via pivot
+                  ->orWhereHas('members', function($sq) use ($user) {
+                      $sq->where('users.id', $user->id);
+                  });
             });
         }
 
@@ -53,7 +59,7 @@ class GroupController extends Controller
         ]);
 
         if (!empty($validated['invited_users'])) {
-            User::whereIn('id', $validated['invited_users'])->update(['group_name' => $group->name]);
+            $group->members()->attach($validated['invited_users']);
         }
 
         return response()->json([
@@ -63,11 +69,55 @@ class GroupController extends Controller
     }
 
     /**
+     * Update the specified group.
+     */
+    public function update(Request $request, Group $group)
+    {
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:255|unique:groups,name,' . $group->id,
+            'is_private' => 'sometimes|boolean',
+            'invited_users' => 'nullable|array',
+            'invited_users.*' => 'exists:users,id'
+        ]);
+
+        if (isset($validated['name'])) {
+            $group->name = $validated['name'];
+        }
+        if (isset($validated['is_private'])) {
+            $group->is_private = $validated['is_private'];
+        }
+        
+        $group->save();
+
+        if ($request->has('invited_users')) {
+            $group->members()->sync($validated['invited_users']);
+        }
+
+        return response()->json([
+            'success' => true,
+            'group' => $group->load('members'),
+        ]);
+    }
+
+    /**
+     * Remove the specified group.
+     */
+    public function destroy(Group $group)
+    {
+        $group->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Group deleted successfully',
+        ]);
+    }
+
+    /**
      * Get detailed stats for a group.
      */
     public function showStats($id)
     {
-        $group = Group::findOrFail($id);
+        $group = Group::with('members')->findOrFail($id);
         
         // Calculate total minutes
         $group->total_minutes = DocumentWorkLog::where('group_name', $group->name)->sum('duration_minutes');

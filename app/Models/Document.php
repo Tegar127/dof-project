@@ -55,11 +55,14 @@ class Document extends Model
                          ->whereIn('status', [DocumentStatus::PENDING_REVIEW, DocumentStatus::APPROVED]);
         }
 
-        return $query->where(function ($q) use ($user) {
+        // Get all groups the user belongs to (Primary + Extra)
+        $groupNames = $user->groups()->pluck('name')->push($user->group_name)->filter()->unique()->toArray();
+
+        return $query->where(function ($q) use ($user, $groupNames) {
             $q->where('author_id', $user->id)
-              ->orWhere(function ($sq) use ($user) {
+              ->orWhere(function ($sq) use ($groupNames) {
                   $sq->where('target_role', 'group')
-                     ->where('target_value', $user->group_name)
+                     ->whereIn('target_value', $groupNames)
                      ->whereIn('status', [DocumentStatus::SENT, DocumentStatus::RECEIVED]);
               })
               ->orWhereHas('logs', function ($lq) use ($user) {

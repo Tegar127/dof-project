@@ -14,8 +14,8 @@
         <!-- Header -->
         <div class="flex justify-between items-center mb-8">
             <div>
-                <h1 class="text-2xl font-bold text-slate-800">Dashboard Overview</h1>
-                <p class="text-slate-500 mt-1">Welcome back, Admin.</p>
+                <h1 class="text-2xl font-bold text-slate-800" x-text="activeTab === 'users' ? 'User Management' : 'Group Management'"></h1>
+                <p class="text-slate-500 mt-1">Manage your organization structure and access.</p>
             </div>
             <div class="flex items-center gap-3">
                 <span class="text-sm text-slate-500 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
@@ -27,21 +27,34 @@
         <!-- Stats -->
         @include('admin.partials.stats')
 
-        <!-- Tab Content -->
+        <!-- Users Tab -->
         <div x-show="activeTab === 'users'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
-            @include('admin.partials.users-table')
+            <!-- Form View -->
+            <div x-show="showForm" class="mb-8">
+                @include('admin.partials.user-modal')
+            </div>
+            
+            <!-- Table View -->
+            <div x-show="!showForm">
+                @include('admin.partials.users-table')
+            </div>
         </div>
 
+        <!-- Groups Tab -->
         <div x-show="activeTab === 'groups'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" style="display: none;">
-            @include('admin.partials.groups-list')
+            <!-- Form View -->
+            <div x-show="showForm" class="mb-8">
+                @include('admin.partials.group-modal')
+            </div>
+
+            <!-- List/Details View -->
+            <div x-show="!showForm">
+                @include('admin.partials.groups-list')
+            </div>
         </div>
     </div>
 
-    <!-- Modals -->
-    @include('admin.partials.user-modal')
-    @include('admin.partials.group-modal')
-
-    <!-- Delete Confirmation Modal -->
+    <!-- Delete Confirmation Modal (Keeping this as modal as it's a critical confirmation) -->
     <div x-show="showDeleteModal" x-cloak class="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4">
         <div @click.away="showDeleteModal = false" class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6">
             <h3 class="text-xl font-bold mb-2 text-slate-800">Delete Document?</h3>
