@@ -24,7 +24,7 @@ window.adminApp = function() {
 
         editingUser: null,
         userForm: {},
-        groupForm: {},
+        groupForm: { invited_users: [], is_private: false },
         token: null,
         notification: {
             show: false,

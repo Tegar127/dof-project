@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\DocumentWorkLog;
 use App\Models\Group;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class GroupController extends Controller
 {
@@ -14,10 +16,22 @@ class GroupController extends Controller
      */
     public function index()
     {
-        $groups = Group::all()->map(function($group) {
+        $user = Auth::user();
+        
+        $query = Group::query();
+
+        if ($user && !$user->isAdmin()) {
+            $query->where(function($q) use ($user) {
+                $q->where('is_private', false)
+                  ->orWhere('name', $user->group_name);
+            });
+        }
+
+        $groups = $query->get()->map(function($group) {
              $group->total_minutes = DocumentWorkLog::where('group_name', $group->name)->sum('duration_minutes');
              return $group;
         });
+        
         return response()->json($groups);
     }
 
@@ -28,9 +42,19 @@ class GroupController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|unique:groups|max:255',
+            'is_private' => 'boolean',
+            'invited_users' => 'nullable|array',
+            'invited_users.*' => 'exists:users,id'
         ]);
 
-        $group = Group::create($validated);
+        $group = Group::create([
+            'name' => $validated['name'],
+            'is_private' => $validated['is_private'] ?? false,
+        ]);
+
+        if (!empty($validated['invited_users'])) {
+            User::whereIn('id', $validated['invited_users'])->update(['group_name' => $group->name]);
+        }
 
         return response()->json([
             'success' => true,
