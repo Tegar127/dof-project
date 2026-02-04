@@ -40,8 +40,8 @@
                             <label class="block text-sm font-semibold text-slate-700 mb-1.5">Group Assignment</label>
                             <select x-model="userForm.group_name" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
                                 <option value="">No Group</option>
-                                <template x-for="group in groups" :key="group">
-                                    <option :value="group" x-text="group"></option>
+                                <template x-for="group in groups" :key="group.id">
+                                    <option :value="group.name" x-text="group.name"></option>
                                 </template>
                             </select>
                         </div>
