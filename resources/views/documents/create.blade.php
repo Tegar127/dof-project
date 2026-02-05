@@ -10,8 +10,9 @@
         
         <!-- Tab Navigation -->
         <div class="flex p-4 bg-gray-50 border-b gap-2">
-            <button id="tabNota" class="flex-1 py-2 px-4 rounded font-bold border transition tab-active">Nota Dinas</button>
-            <button id="tabSppd" class="flex-1 py-2 px-4 rounded font-bold border transition tab-inactive">Surat Perintah</button>
+            <button id="tabNota" class="flex-1 py-2 px-3 rounded font-bold border transition tab-active text-xs">Nota Dinas</button>
+            <button id="tabSppd" class="flex-1 py-2 px-3 rounded font-bold border transition tab-inactive text-xs">Surat Perintah</button>
+            <button id="tabPerj" class="flex-1 py-2 px-3 rounded font-bold border transition tab-inactive text-xs">Perjanjian</button>
         </div>
 
         <!-- Form Content -->
@@ -109,6 +110,55 @@
                         <button type="button" id="btnAddSppdCC" class="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100">+ Tambah</button>
                     </div>
 
+                </div>
+
+                <!-- Perjanjian Inputs -->
+                <div id="inputsPerj" class="hidden space-y-4">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-bold text-gray-700 uppercase">Judul & Tentang</label>
+                        <textarea id="perjAbout" rows="3" class="w-full p-2 border border-gray-300 rounded" placeholder="TENTANG SEWA MENYEWA..."></textarea>
+                    </div>
+
+                    <div class="bg-amber-50 p-3 rounded border border-amber-200 space-y-2">
+                        <label class="block text-sm font-bold text-amber-800">Waktu & Tempat</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="text" id="perjDay" class="w-full p-2 border border-gray-300 rounded" placeholder="Hari (Senin)">
+                            <input type="text" id="perjDateWritten" class="w-full p-2 border border-gray-300 rounded" placeholder="Tanggal Teks (sembilan belas...)">
+                        </div>
+                        <input type="text" id="perjPlace" class="w-full p-2 border border-gray-300 rounded" placeholder="Tempat (Jakarta)">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-bold text-gray-700 uppercase">Pihak Kesatu (ASABRI)</label>
+                        <input type="text" id="perjP1Name" class="w-full p-2 border border-gray-300 rounded mb-1" placeholder="Nama Penandatangan (Hari Murti)">
+                        <input type="text" id="perjP1Pos" class="w-full p-2 border border-gray-300 rounded mb-1" placeholder="Jabatan">
+                        <textarea id="perjP1Auth" rows="3" class="w-full p-2 border border-gray-300 rounded" placeholder="Berdasarkan Surat Kuasa..."></textarea>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-sm font-bold text-gray-700 uppercase">Pihak Kedua</label>
+                        <input type="text" id="perjP2Name" class="w-full p-2 border border-gray-300 rounded mb-1" placeholder="Nama Pihak Kedua">
+                        <textarea id="perjP2Info" rows="3" class="w-full p-2 border border-gray-300 rounded" placeholder="Lahir di..., Alamat..., NIK..."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 font-bold">Poin-poin Perjanjian (A, B...)</label>
+                        <div id="perjPointsContainer" class="space-y-2">
+                            <div class="flex gap-2 item-row">
+                                <span class="pt-2 font-bold text-gray-400">#</span>
+                                <textarea class="perj-point-input w-full p-2 border border-gray-300 rounded" rows="2" placeholder="Bahwa Pihak Kesatu adalah..."></textarea>
+                            </div>
+                        </div>
+                        <button type="button" id="btnAddPerjPoint" class="text-xs bg-amber-50 text-amber-600 px-2 py-1 rounded hover:bg-amber-100 mt-2">+ Tambah Poin</button>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 font-bold">Tabel Paraf</label>
+                        <div id="perjParafContainer" class="space-y-2">
+                            <!-- Injected by JS -->
+                        </div>
+                        <button type="button" id="btnAddPerjParaf" class="text-xs bg-amber-50 text-amber-600 px-2 py-1 rounded hover:bg-amber-100 mt-2">+ Tambah Baris Paraf</button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -245,13 +295,189 @@
 
                 <div style="clear: both;"></div>
                 
-                <div class="mt-8 text-sm">
-                    <p class="font-bold underline mb-1">Tembusan:</p>
-                    <ol id="prevSppdCCList" class="list-numbered" style="margin-left: 15px;"></ol>
-                </div>
-            </div>
+                                <div class="mt-8 text-sm">
+                
+                                    <p class="font-bold underline mb-1">Tembusan:</p>
+                
+                                    <ol id="prevSppdCCList" class="list-numbered" style="margin-left: 15px;"></ol>
+                
+                                </div>
+                
+                            </div>
+                
+                
+                
+                            <!-- Preview Perjanjian -->
+                
+                            <div id="previewPerj" class="hidden">
+                
+                                <div class="text-center font-bold mb-8 uppercase leading-tight">
+                
+                                    <p class="m-0">PERJANJIAN KERJA SAMA</p>
+                
+                                    <p class="m-0">ANTARA</p>
+                
+                                    <p class="m-0">PT ASABRI (PERSERO)</p>
+                
+                                    <p class="m-0">DENGAN</p>
+                
+                                    <p id="prevPerjP2NameTop" class="m-0">...</p>
+                
+                                    <p class="m-0">TENTANG</p>
+                
+                                    <p id="prevPerjAbout" class="m-0">...</p>
+                
+                                    <p class="m-0">NOMOR: <span class="prev-docNum">...</span></p>
+                
+                                </div>
+                
+                
+                
+                                <div class="text-justify leading-normal text-[12pt]">
+                
+                                    <p class="mb-4">
+                
+                                        Pada hari ini <span id="prevPerjDay" class="font-bold">...</span>, 
+                
+                                        tanggal <span id="prevPerjDateWritten" class="font-bold">...</span> 
+                
+                                        bertempat di <span id="prevPerjPlace">...</span>, 
+                
+                                        kami yang bertanda tangan di bawah ini:
+                
+                                    </p>
+                
+                
+                
+                                    <div class="flex mb-4 items-start">
+                
+                                        <div class="w-8 flex-shrink-0 font-bold">1.</div>
+                
+                                        <div class="flex-grow">
+                
+                                            <span class="font-bold">PT ASABRI (Persero)</span>, 
+                
+                                            suatu Perseroan Terbatas yang didirikan berdasarkan Hukum Negara Republik Indonesia, 
+                
+                                            yang berkedudukan di Jalan Mayjen Sutoyo Nomor 11 Jakarta Timur, dalam hal ini diwakili oleh 
+                
+                                            <span id="prevPerjP1Name" class="font-bold">...</span> 
+                
+                                            dalam jabatannya selaku <span id="prevPerjP1Pos" class="font-bold">...</span> 
+                
+                                            <span id="prevPerjP1Auth">...</span>, 
+                
+                                            untuk selanjutnya disebut <span class="font-bold">"Pihak Kesatu"</span>; dan
+                
+                                        </div>
+                
+                                    </div>
+                
+                
+                
+                                    <div class="flex mb-4 items-start">
+                
+                                        <div class="w-8 flex-shrink-0 font-bold">2.</div>
+                
+                                        <div class="flex-grow">
+                
+                                            <span id="prevPerjP2Name" class="font-bold">...</span>, 
+                
+                                            <span id="prevPerjP2Info">...</span>, 
+                
+                                            dan untuk selanjutnya disebut <span class="font-bold">"Pihak Kedua"</span>.
+                
+                                        </div>
+                
+                                    </div>
+                
+                
+                
+                                                        <p class="mb-4">Pihak Kesatu dan Pihak Kedua selanjutnya secara bersama-sama disebut sebagai <span class="font-bold">"Para Pihak"</span> dan masing-masing disebut <span class="font-bold">"Pihak"</span>, serta dalam kedudukannya sebagaimana tersebut di atas, terlebih dulu menerangkan hal-hal sebagai berikut:</p>
+                
+                
+                
+                                    
+                
+                
+                
+                                                        <div id="prevPerjPointsList" class="space-y-4">
+                
+                
+                
+                                                            <!-- Points A, B, etc will be injected here -->
+                
+                
+                
+                                                        </div>
+                
+                
+                
+                                    
+                
+                
+                
+                                                        <!-- Paraf Table Template -->
+                
+                
+                
+                                                        <div class="paraf-container">
+                
+                
+                
+                                                            <!-- Injected by JS -->
+                
+                
+                
+                                                        </div>
+                
+                
+                
+                                                    </div>
+                
+                
+                
+                                                </div>
+                
+                
+                
+                        </div>
+                
+                    </div>
+</div>
 
+<!-- Signature Modal for Create Page -->
+<div id="signatureModal" class="fixed inset-0 z-[100] bg-black/50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-lg max-w-lg w-full p-6">
+        <h3 class="text-xl font-bold mb-1 text-slate-800">Tanda Tangan Paraf</h3>
+        <p id="sigModalLabel" class="text-xs text-indigo-600 font-bold mb-4 uppercase tracking-wider"></p>
+
+        <!-- Tabs -->
+        <div class="flex border-b border-gray-200 mb-4">
+            <button id="sigTabDraw" class="flex-1 py-2 text-sm font-medium border-b-2 border-indigo-600 text-indigo-600">Gambar Manual</button>
+            <button id="sigTabUpload" class="flex-1 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700">Upload Gambar</button>
+        </div>
+        
+        <div id="sigDrawArea" class="border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 relative h-64 w-full mb-4 overflow-hidden touch-none">
+            <canvas id="sig-canvas" class="absolute inset-0 w-full h-full cursor-crosshair"></canvas>
+        </div>
+
+        <div id="sigUploadArea" class="hidden border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 relative h-64 w-full mb-4 flex flex-col items-center justify-center p-4 text-center">
+            <svg class="w-10 h-10 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <p class="text-sm text-gray-500 mb-4">Upload gambar (PNG/JPG)</p>
+            <input type="file" id="sig-upload-input" accept="image/*" class="text-xs">
+            <div id="sig-upload-preview" class="hidden mt-2 max-h-32 overflow-hidden">
+                <img src="" class="max-h-32 mx-auto">
+            </div>
+        </div>
+
+        <div class="flex gap-3">
+            <button id="btnSigClear" class="px-4 py-2 text-red-600 hover:bg-red-50 rounded font-medium">Hapus</button>
+            <div class="flex-1"></div>
+            <button id="btnSigCancel" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded font-medium">Batal</button>
+            <button id="btnSigSave" class="px-6 py-2 bg-indigo-600 text-white rounded font-medium hover:bg-indigo-700">Simpan</button>
         </div>
     </div>
 </div>
+
 @endsection

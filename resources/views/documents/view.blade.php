@@ -26,9 +26,13 @@
             <div class="flex items-start justify-between">
                 <div class="flex-1">
                     <div class="flex items-center gap-3 mb-2">
-                        <span :class="document?.type === 'nota' ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700'" 
+                        <span :class="{
+                                'bg-indigo-100 text-indigo-700': document?.type === 'nota',
+                                'bg-emerald-100 text-emerald-700': document?.type === 'sppd',
+                                'bg-amber-100 text-amber-700': document?.type === 'perj'
+                              }" 
                               class="px-3 py-1 rounded-full text-xs font-semibold uppercase">
-                            <span x-text="document?.type"></span>
+                            <span x-text="document?.type === 'perj' ? 'Perjanjian' : (document?.type === 'sppd' ? 'SPPD' : 'Nota Dinas')"></span>
                         </span>
                         <span class="text-sm text-slate-500">
                             Versi <span x-text="document?.version" class="font-mono font-semibold"></span>

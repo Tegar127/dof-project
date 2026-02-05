@@ -57,6 +57,29 @@
     }
     .paraf-box td { border: 1px solid black; padding: 2px 5px; }
 
+    /* --- Perjanjian Specific --- */
+    .paraf-container {
+        margin-top: 40px;
+        width: 100%;
+    }
+    .paraf-table { 
+        border-collapse: collapse; 
+        width: 85%; 
+        font-family: Arial, sans-serif; 
+        font-size: 10pt; 
+    }
+    .paraf-table td { 
+        border: 1px solid black; 
+        text-align: center; 
+        padding: 4px 8px; 
+        vertical-align: middle; 
+        background-color: white !important;
+    }
+    .paraf-table .col-paraf-label { width: 40px; font-weight: normal; }
+    .paraf-table .cell-width { width: 100px; }
+    .paraf-table .row-name { height: 20px; }
+    .paraf-table .row-signature { height: 65px; }
+
     /* Utility */
     .tab-active { @apply bg-blue-600 text-white border-blue-600; }
     .tab-inactive { @apply bg-white text-gray-700 border-gray-300; }

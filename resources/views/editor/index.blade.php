@@ -174,7 +174,8 @@
     <!-- Signature Modal -->
     <div x-show="showSignatureModal" x-cloak class="fixed inset-0 z-[80] bg-black/50 flex items-center justify-center p-4">
         <div @click.away="showSignatureModal = false" class="bg-white rounded-xl shadow-lg max-w-lg w-full p-6">
-            <h3 class="text-xl font-bold mb-4 text-slate-800">Tanda Tangan Digital</h3>
+            <h3 class="text-xl font-bold mb-1 text-slate-800">Tanda Tangan Digital</h3>
+            <p class="text-xs text-indigo-600 font-bold mb-4 uppercase tracking-wider" x-text="'Untuk: ' + activeSignatureLabel"></p>
 
             <!-- Tabs -->
             <div class="flex border-b border-gray-200 mb-4">
@@ -442,8 +443,12 @@
         <div class="px-6 py-5 bg-slate-50/50 border-b border-gray-100 space-y-3">
              <div class="flex items-center gap-2">
                 <span class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border" 
-                      :class="document.type === 'nota' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'"
-                      x-text="document.type === 'nota' ? 'Nota Dinas' : 'SPPD'"></span>
+                      :class="{
+                        'bg-indigo-50 text-indigo-600 border-indigo-100': document.type === 'nota',
+                        'bg-emerald-50 text-emerald-600 border-emerald-100': document.type === 'sppd',
+                        'bg-amber-50 text-amber-600 border-amber-100': document.type === 'perj'
+                      }"
+                      x-text="document.type === 'nota' ? 'Nota Dinas' : (document.type === 'sppd' ? 'SPPD' : 'Perjanjian')"></span>
                 
                 <div class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 border border-slate-200" 
                      x-text="getStatusLabel(document.status)"></div>
@@ -830,10 +835,201 @@
                                     </button>
                                 </div>
                             </div>
-                        </div>
-                    </template>
-
-                </fieldset>
+                                                </div>
+                                            </template>
+                        
+                                            <!-- PERJANJIAN Fields -->
+                                            <template x-if="document.type === 'perj'">
+                                                <div class="space-y-6">
+                                                    
+                                                    <!-- Section: Header Info -->
+                                                    <div class="space-y-4">
+                                                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                                            <span class="w-1 h-4 bg-amber-500 rounded-full"></span>
+                                                            Tentang & Waktu
+                                                        </h3>
+                                                        
+                                                        <div class="grid gap-4">
+                                                            <div class="space-y-1">
+                                                                <label class="text-xs text-slate-500 font-medium ml-1">Tentang</label>
+                                                                <textarea x-model="document.content_data.about" rows="2" class="form-textarea-styled" placeholder="Isi tentang perjanjian..."></textarea>
+                                                            </div>
+                                                            <div class="grid grid-cols-2 gap-3">
+                                                                <div class="space-y-1">
+                                                                    <label class="text-xs text-slate-500 font-medium ml-1">Hari</label>
+                                                                    <input type="text" x-model="document.content_data.day" class="form-input-styled" placeholder="Senin">
+                                                                </div>
+                                                                <div class="space-y-1">
+                                                                    <label class="text-xs text-slate-500 font-medium ml-1">Lokasi</label>
+                                                                    <input type="text" x-model="document.content_data.location" class="form-input-styled" placeholder="Jakarta">
+                                                                </div>
+                                                            </div>
+                                                            <div class="space-y-1">
+                                                                <label class="text-xs text-slate-500 font-medium ml-1">Tanggal (Teks)</label>
+                                                                <input type="text" x-model="document.content_data.dateWritten" class="form-input-styled" placeholder="sembilan belas Januari dua ribu dua puluh enam">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                        
+                                                    <!-- Section: Parties -->
+                                                    <div class="space-y-4 pt-2">
+                                                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                                            <span class="w-1 h-4 bg-amber-500 rounded-full"></span>
+                                                            Para Pihak
+                                                        </h3>
+                        
+                                                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                                                            <p class="text-[10px] font-bold text-slate-400 uppercase">Pihak Kesatu (ASABRI)</p>
+                                                            <input type="text" x-model="document.content_data.party1Name" class="form-input-styled" placeholder="Nama Penandatangan">
+                                                            <input type="text" x-model="document.content_data.party1Pos" class="form-input-styled" placeholder="Jabatan">
+                                                            <textarea x-model="document.content_data.party1Auth" rows="3" class="form-textarea-styled text-xs" placeholder="Dasar hukum / Surat Kuasa..."></textarea>
+                                                        </div>
+                        
+                                                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                                                            <p class="text-[10px] font-bold text-slate-400 uppercase">Pihak Kedua</p>
+                                                            <input type="text" x-model="document.content_data.party2Name" class="form-input-styled" placeholder="Nama Pihak Kedua">
+                                                            <textarea x-model="document.content_data.party2Info" rows="3" class="form-textarea-styled text-xs" placeholder="Detail Pihak Kedua (Lahir, Alamat, NIK...)"></textarea>
+                                                        </div>
+                                                    </div>
+                        
+                                                     <!-- Section: Points -->
+                                                     <div class="space-y-4 pt-2">
+                                                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                                            <span class="w-1 h-4 bg-amber-500 rounded-full"></span>
+                                                            Poin-poin Perjanjian
+                                                        </h3>
+                        
+                                                        <div class="space-y-2">
+                                                            <template x-for="(item, index) in document.content_data.points" :key="index">
+                                                                <div class="flex gap-2 group">
+                                                                    <div class="relative w-full">
+                                                                        <span class="absolute left-3 top-2.5 text-xs text-slate-400 font-bold" x-text="String.fromCharCode(65 + index) + '.'"></span>
+                                                                        <textarea x-model="document.content_data.points[index]" class="form-textarea-styled pl-8 text-xs" rows="2" placeholder="Isi poin..."></textarea>
+                                                                    </div>
+                                                                    <button @click="removeListItem('points', index)" class="text-slate-300 hover:text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors">
+                                                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                                    </button>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                        <button @click="addListItem('points')" class="w-full py-2 border border-dashed border-amber-200 text-amber-600 text-xs font-bold rounded-lg hover:bg-amber-50 transition-all flex items-center justify-center gap-1">
+                                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                                                            Tambah Poin Perjanjian
+                                                        </button>
+                                                    </div>
+                        
+                                                                                                            <!-- Section: Paraf (Dinamis) -->
+                        
+                                                                                                            <div class="space-y-4 pt-2">
+                        
+                                                                                                                <div class="flex items-center justify-between">
+                        
+                                                                                                                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        
+                                                                                                                        <span class="w-1 h-4 bg-amber-500 rounded-full"></span>
+                        
+                                                                                                                        Tabel Paraf
+                        
+                                                                                                                    </h3>
+                        
+                                                                                                                    <button @click="document.content_data.paraf.push({code: '', name: '', signature: ''})" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 uppercase tracking-wider">
+                        
+                                                                                                                        + Tambah Baris
+                        
+                                                                                                                    </button>
+                        
+                                                                                                                </div>
+                        
+                                                                                
+                        
+                                                                                                                <div class="space-y-3">
+                        
+                                                                                                                    <template x-for="(item, index) in document.content_data.paraf" :key="index">
+                        
+                                                                                                                        <div x-show="canSignParaf(index)" 
+                        
+                                                                                                                             @mouseenter="highlightParaf(index, true)"
+                        
+                                                                                                                             @mouseleave="highlightParaf(index, false)"
+                        
+                                                                                                                             x-transition:enter="transition ease-out duration-300"
+                        
+                                                                                                                             class="bg-slate-50 p-3 rounded-lg border border-slate-200 relative group">
+                        
+                                                                                                                            
+                        
+                                                                                                                            <button @click="document.content_data.paraf.splice(index, 1)" class="absolute -right-2 -top-2 bg-white text-red-500 rounded-full shadow border border-red-100 p-1 opacity-0 group-hover:opacity-100 transition-all z-10">
+                        
+                                                                                                                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        
+                                                                                                                            </button>
+                        
+                                                                                
+                        
+                                                                                                                            <div class="grid grid-cols-2 gap-2 mb-3">
+                        
+                                                                                                                                <div class="space-y-1">
+                        
+                                                                                                                                    <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Kode</label>
+                        
+                                                                                                                                    <input type="text" x-model="document.content_data.paraf[index].code" class="form-input-styled text-[10px] py-1" placeholder="DV-...">
+                        
+                                                                                                                                </div>
+                        
+                                                                                                                                <div class="space-y-1">
+                        
+                                                                                                                                    <label class="text-[9px] font-bold text-slate-400 uppercase ml-1">Nama</label>
+                        
+                                                                                                                                    <input type="text" x-model="document.content_data.paraf[index].name" class="form-input-styled text-[10px] py-1" placeholder="Nama...">
+                        
+                                                                                                                                </div>
+                        
+                                                                                                                            </div>
+                        
+                                                                                
+                        
+                                                                                                                            <!-- Paraf TTD -->
+                        
+                                                                                                                            <div>
+                        
+                                                                                                                                <template x-if="!item.signature">
+                        
+                                                                                                                                    <button @click="initSignaturePad('paraf.' + index, (item.code || 'Paraf ' + (index+1)) + ' - ' + (item.name || ''))" class="w-full py-1.5 border border-dashed border-indigo-200 text-indigo-500 text-[10px] font-bold rounded hover:bg-white transition-all">
+                        
+                                                                                                                                        ISI Tanda Tangan <span x-text="item.code"></span>
+                        
+                                                                                                                                    </button>
+                        
+                                                                                                                                </template>
+                        
+                                                                                                                                <template x-if="item.signature">
+                        
+                                                                                                                                    <div class="relative bg-white border border-indigo-100 rounded p-1 flex items-center justify-center group/sig">
+                        
+                                                                                                                                        <img :src="item.signature" class="h-8 object-contain">
+                        
+                                                                                                                                        <button @click="removeSignature('paraf.' + index)" class="absolute inset-0 bg-black/5 flex items-center justify-center opacity-0 group-hover/sig:opacity-100 transition-opacity">
+                        
+                                                                                                                                            <span class="bg-white text-red-500 text-[8px] px-1 rounded shadow font-bold">HAPUS TTD</span>
+                        
+                                                                                                                                        </button>
+                        
+                                                                                                                                    </div>
+                        
+                                                                                                                                </template>
+                        
+                                                                                                                            </div>
+                        
+                                                                                                                        </div>
+                        
+                                                                                                                    </template>
+                        
+                                                                                                                </div>
+                        
+                                                                                                            </div>
+                                                </div>
+                                            </template>
+                                        </fieldset>
             </div>
             
             <!-- Bottom Actions -->
@@ -1215,20 +1411,243 @@
 
                     <div style="clear: both;"></div>
                     
-                    <div class="mt-8 text-sm">
-                        <p class="font-bold underline mb-1">Tembusan:</p>
-                        <ol class="list-numbered" style="margin-left: 15px;">
-                            <template x-for="item in document.content_data.ccs">
-                                <li x-text="item" class="mb-1"></li>
-                            </template>
-                            <li x-show="!document.content_data.ccs?.length" style="list-style: none">...</li>
-                        </ol>
-                    </div>
-                </div>
-            </template>
-
-        </div>
-    </div>
+                                        <div class="mt-8 text-sm">
+                    
+                                            <p class="font-bold underline mb-1">Tembusan:</p>
+                    
+                                            <ol class="list-numbered" style="margin-left: 15px;">
+                    
+                                                <template x-for="item in document.content_data.ccs">
+                    
+                                                    <li x-text="item" class="mb-1"></li>
+                    
+                                                </template>
+                    
+                                                <li x-show="!document.content_data.ccs?.length" style="list-style: none">...</li>
+                    
+                                            </ol>
+                    
+                                        </div>
+                    
+                                    </div>
+                    
+                                </template>
+                    
+                    
+                    
+                                <!-- PREVIEW: PERJANJIAN -->
+                    
+                                <template x-if="document.type === 'perj'">
+                    
+                                    <div class="text-justify leading-normal" style="font-family: 'Times New Roman', serif; font-size: 11pt;">
+                    
+                                        <div class="text-center font-bold mb-8 uppercase leading-tight">
+                    
+                                            <p class="m-0">PERJANJIAN KERJA SAMA</p>
+                    
+                                            <p class="m-0">ANTARA</p>
+                    
+                                            <p class="m-0">PT ASABRI (PERSERO)</p>
+                    
+                                            <p class="m-0">DENGAN</p>
+                    
+                                            <p x-text="document.content_data.party2Name || '...'" class="m-0"></p>
+                    
+                                            <p class="m-0">TENTANG</p>
+                    
+                                            <p x-text="document.content_data.about || '...'" class="m-0"></p>
+                    
+                                            <p class="m-0">NOMOR: <span x-text="document.content_data.docNumber || '...'"></span></p>
+                    
+                                        </div>
+                    
+                    
+                    
+                                        <p class="mb-4">
+                    
+                                            Pada hari ini <span x-text="document.content_data.day || '...'" class="font-bold"></span>, 
+                    
+                                            tanggal <span x-text="document.content_data.dateWritten || '...'" class="font-bold"></span> 
+                    
+                                            bertempat di <span x-text="document.content_data.location || '...'"></span>, 
+                    
+                                            kami yang bertanda tangan di bawah ini:
+                    
+                                        </p>
+                    
+                    
+                    
+                                        <div class="flex mb-4 items-start">
+                    
+                                            <div class="w-8 flex-shrink-0 font-bold">1.</div>
+                    
+                                            <div class="flex-grow">
+                    
+                                                <span class="font-bold">PT ASABRI (Persero)</span>, 
+                    
+                                                suatu Perseroan Terbatas yang didirikan berdasarkan Hukum Negara Republik Indonesia, 
+                    
+                                                yang berkedudukan di Jalan Mayjen Sutoyo Nomor 11 Jakarta Timur, dalam hal ini diwakili oleh 
+                    
+                                                <span x-text="document.content_data.party1Name || '...'" class="font-bold"></span> 
+                    
+                                                dalam jabatannya selaku <span x-text="document.content_data.party1Pos || '...'" class="font-bold"></span> 
+                    
+                                                <span x-text="document.content_data.party1Auth || '...'"></span>, 
+                    
+                                                untuk selanjutnya disebut <span class="font-bold">"Pihak Kesatu"</span>; dan
+                    
+                                            </div>
+                    
+                                        </div>
+                    
+                    
+                    
+                                        <div class="flex mb-4 items-start">
+                    
+                                            <div class="w-8 flex-shrink-0 font-bold">2.</div>
+                    
+                                            <div class="flex-grow">
+                    
+                                                <span x-text="document.content_data.party2Name || '...'" class="font-bold"></span>, 
+                    
+                                                <span x-text="document.content_data.party2Info || '...'"></span>, 
+                    
+                                                dan untuk selanjutnya disebut <span class="font-bold">"Pihak Kedua"</span>.
+                    
+                                            </div>
+                    
+                                        </div>
+                    
+                    
+                    
+                                        <p class="mb-4">Pihak Kesatu dan Pihak Kedua selanjutnya secara bersama-sama disebut sebagai <span class="font-bold">"Para Pihak"</span> dan masing-masing disebut <span class="font-bold">"Pihak"</span>, serta dalam kedudukannya sebagaimana tersebut di atas, terlebih dulu menerangkan hal-hal sebagai berikut:</p>
+                    
+                    
+                    
+                                        <div class="space-y-4">
+                    
+                                            <template x-for="(point, index) in document.content_data.points">
+                    
+                                                <div class="flex items-start">
+                    
+                                                    <div class="w-8 flex-shrink-0 font-bold" x-text="String.fromCharCode(65 + index) + '.'"></div>
+                    
+                                                    <div class="flex-grow text-justify" x-text="point"></div>
+                    
+                                                </div>
+                    
+                                            </template>
+                    
+                                        </div>
+                    
+                    
+                    
+                                                                                                                        <!-- Paraf Table (Dinamis) -->
+                    
+                    
+                    
+                                                                                                                        <div class="paraf-container">
+                    
+                    
+                    
+                                                                                                                            <table class="paraf-table">
+                    
+                    
+                    
+                                                                                                                                <tr>
+                    
+                    
+                    
+                                                                                                                                    <td rowspan="3" class="col-paraf-label">Paraf</td>
+                    
+                    
+                    
+                                                                                                                                    <template x-for="(p, index) in document.content_data.paraf" :key="'code-'+index">
+                    
+                    
+                    
+                                                                                                                                        <td class="cell-width" x-text="p.code || '...'"></td>
+                    
+                    
+                    
+                                                                                                                                    </template>
+                    
+                    
+                    
+                                                                                                                                </tr>
+                    
+                    
+                    
+                                                                                                                                <tr class="row-name">
+                    
+                    
+                    
+                                                                                                                                    <template x-for="(p, index) in document.content_data.paraf" :key="'name-'+index">
+                    
+                    
+                    
+                                                                                                                                        <td x-text="p.name || '...'"></td>
+                    
+                    
+                    
+                                                                                                                                    </template>
+                    
+                    
+                    
+                                                                                                                                </tr>
+                    
+                    
+                    
+                                                                                                                                <tr class="row-signature">
+                    
+                    
+                    
+                                                                                                                                    <template x-for="(p, index) in document.content_data.paraf" :key="'sig-'+index">
+                    
+                    
+                    
+                                                                                                                                        <td :id="'paraf-cell-' + index" class="align-middle h-[65px] transition-all duration-300">
+                    
+                    
+                    
+                                                                                                                                            <template x-if="p.signature">
+                    
+                    
+                    
+                                                                                                                                                <img :src="p.signature" style="max-height: 60px; margin: 0 auto; display: block;">
+                    
+                    
+                    
+                                                                                                                                            </template>
+                    
+                    
+                    
+                                                                                                                                        </td>
+                    
+                    
+                    
+                                                                                                                                    </template>
+                    
+                    
+                    
+                                                                                                                                </tr>
+                    
+                    
+                    
+                                                                                                                            </table>
+                    
+                    
+                    
+                                                                                                                        </div>
+                    
+                                    </div>
+                    
+                                </template>
+                    
+                            </div>
+                    
+                        </div>
 </div>
 
 

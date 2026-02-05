@@ -230,7 +230,11 @@ window.dashboardApp = function () {
             // Logic to move documents without folders to their category folders
             const docsWithoutFolder = this.documents.filter(d => !d.folder_id);
             for (const doc of docsWithoutFolder) {
-                const folderName = doc.type === 'nota' ? 'Nota Dinas' : 'Surat Perintah (SPPD)';
+                let folderName = 'Draft';
+                if (doc.type === 'nota') folderName = 'Nota Dinas';
+                else if (doc.type === 'sppd') folderName = 'Surat Perintah (SPPD)';
+                else if (doc.type === 'perj') folderName = 'Perjanjian Kerja Sama';
+                
                 const folder = this.folders.find(f => f.name === folderName);
                 if (folder) {
                     await fetch(`/api/folders/move/${doc.id}`, {

@@ -48,6 +48,7 @@ window.editorApp = function () {
         uploadedSignatureData: null,
         signaturePad: null,
         activeSignatureField: 'signature', // Default to main signature
+        activeSignatureLabel: '',
         alertMessage: '',
         confirmTitle: '',
         confirmMessage: '',
@@ -266,8 +267,9 @@ window.editorApp = function () {
             }
         },
 
-        initSignaturePad(field = 'signature') {
+        initSignaturePad(field = 'signature', label = 'Dokumen Utama') {
             this.activeSignatureField = field;
+            this.activeSignatureLabel = label;
             this.showSignatureModal = true;
             this.signatureTab = 'draw';
             this.uploadedSignatureData = null;
@@ -287,6 +289,17 @@ window.editorApp = function () {
                     });
                 }
             });
+        },
+
+        highlightParaf(index, active) {
+            const el = document.getElementById(`paraf-cell-${index}`);
+            if (el) {
+                if (active) {
+                    el.classList.add('bg-indigo-50', 'ring-2', 'ring-indigo-400', 'ring-inset');
+                } else {
+                    el.classList.remove('bg-indigo-50', 'ring-2', 'ring-indigo-400', 'ring-inset');
+                }
+            }
         },
 
         handleSignatureUpload(event) {
@@ -331,7 +344,17 @@ window.editorApp = function () {
             }
 
             if (data) {
-                this.document.content_data[this.activeSignatureField] = data;
+                // Handle nested array signature (e.g., paraf.0.signature)
+                if (this.activeSignatureField.startsWith('paraf.')) {
+                    const parts = this.activeSignatureField.split('.');
+                    const index = parseInt(parts[1]);
+                    if (!this.document.content_data.paraf[index]) {
+                        this.document.content_data.paraf[index] = {};
+                    }
+                    this.document.content_data.paraf[index].signature = data;
+                } else {
+                    this.document.content_data[this.activeSignatureField] = data;
+                }
                 this.showSignatureModal = false;
             } else {
                 this.alertMessage = 'Tanda tangan masih kosong!';
@@ -340,7 +363,21 @@ window.editorApp = function () {
         },
 
         removeSignature(field = 'signature') {
-            this.document.content_data[field] = '';
+            if (field.startsWith('paraf.')) {
+                const parts = field.split('.');
+                const index = parseInt(parts[1]);
+                if (this.document.content_data.paraf[index]) {
+                    this.document.content_data.paraf[index].signature = '';
+                }
+            } else {
+                this.document.content_data[field] = '';
+            }
+        },
+
+        canSignParaf(index) {
+            if (index === 0) return true;
+            // Can sign if the previous one has a signature
+            return !!(this.document.content_data.paraf[index - 1] && this.document.content_data.paraf[index - 1].signature);
         },
 
         async loadGroups() {
@@ -402,6 +439,12 @@ window.editorApp = function () {
                     if (!this.document.content_data.basis) this.document.content_data.basis = [''];
                     if (!this.document.content_data.remembers) this.document.content_data.remembers = [''];
                     if (!this.document.content_data.ccs) this.document.content_data.ccs = [''];
+                    if (!this.document.content_data.points) this.document.content_data.points = [''];
+                    if (!this.document.content_data.paraf || this.document.content_data.paraf.length === 0) {
+                        this.document.content_data.paraf = [
+                            { code: '', name: '', signature: '' }
+                        ];
+                    }
                 }
             } catch (e) { console.error(e); }
         },

@@ -196,31 +196,30 @@
                 <div class="h-8 w-1.5 bg-indigo-500 rounded-full"></div>
                 <h2 class="text-white font-bold text-xl tracking-tight">Buat Dokumen Baru</h2>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- User Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                 <!-- Card 1: Nota Dinas -->
                 <button 
                     x-show="currentUser?.role === 'user'" 
                     @click="handleCreate('nota')" 
-                    class="group relative bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:border-indigo-500/50 transition-all hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 overflow-hidden text-left"
+                    class="group relative bg-white p-6 rounded-3xl shadow-sm border border-slate-200 hover:border-indigo-500/50 transition-all hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1 overflow-hidden text-left"
                 >
                     <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <svg class="w-24 h-24" fill="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-20 h-20" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM13 9V3.5L18.5 9H13z"/>
                         </svg>
                     </div>
                     
                     <div class="relative z-10">
-                        <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mb-6 group-hover:scale-110 transition-transform group-hover:bg-indigo-600 group-hover:text-white shadow-sm shadow-indigo-100">
-                            <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div class="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mb-5 group-hover:scale-110 transition-transform group-hover:bg-indigo-600 group-hover:text-white shadow-sm shadow-indigo-100">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                         </div>
-                        <h3 class="text-xl font-bold text-slate-800 mb-2">Nota Dinas Baru</h3>
-                        <p class="text-slate-500 text-sm leading-relaxed mb-6">Buat draf nota dinas resmi dengan format standar secara otomatis.</p>
-                        <div class="flex items-center text-indigo-600 font-semibold text-sm group-hover:gap-2 transition-all">
+                        <h3 class="text-lg font-bold text-slate-800 mb-2">Nota Dinas</h3>
+                        <p class="text-slate-500 text-xs leading-relaxed mb-4">Buat draf nota dinas resmi standar.</p>
+                        <div class="flex items-center text-indigo-600 font-semibold text-xs group-hover:gap-2 transition-all">
                             Mulai Buat 
-                            <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg class="w-3 h-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                             </svg>
                         </div>
@@ -231,54 +230,79 @@
                 <button 
                     x-show="currentUser?.role === 'user'" 
                     @click="handleCreate('sppd')" 
-                    class="group relative bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:border-emerald-500/50 transition-all hover:shadow-2xl hover:shadow-emerald-500/10 hover:-translate-y-1 overflow-hidden text-left"
+                    class="group relative bg-white p-6 rounded-3xl shadow-sm border border-slate-200 hover:border-emerald-500/50 transition-all hover:shadow-2xl hover:shadow-emerald-500/10 hover:-translate-y-1 overflow-hidden text-left"
                 >
                     <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <svg class="w-24 h-24" fill="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-20 h-20" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
                         </svg>
                     </div>
                     
                     <div class="relative z-10">
-                        <div class="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 mb-6 group-hover:scale-110 transition-transform group-hover:bg-emerald-600 group-hover:text-white shadow-sm shadow-emerald-100">
-                            <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div class="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 mb-5 group-hover:scale-110 transition-transform group-hover:bg-emerald-600 group-hover:text-white shadow-sm shadow-emerald-100">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                         </div>
-                        <h3 class="text-xl font-bold text-slate-800 mb-2">SPPD Baru</h3>
-                        <p class="text-slate-500 text-sm leading-relaxed mb-6">Terbitkan Surat Perintah Perjalanan Dinas dengan data personil lengkap.</p>
-                        <div class="flex items-center text-emerald-600 font-semibold text-sm group-hover:gap-2 transition-all">
+                        <h3 class="text-lg font-bold text-slate-800 mb-2">SPPD</h3>
+                        <p class="text-slate-500 text-xs leading-relaxed mb-4">Surat Perintah Perjalanan Dinas.</p>
+                        <div class="flex items-center text-emerald-600 font-semibold text-xs group-hover:gap-2 transition-all">
                             Mulai Buat 
-                            <svg class="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg class="w-3 h-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                             </svg>
                         </div>
                     </div>
                 </button>
 
-                <!-- Card 3: Stats -->
+                <!-- Card 3: Perjanjian Kerja Sama -->
+                <button 
+                    x-show="currentUser?.role === 'user'" 
+                    @click="handleCreate('perj')" 
+                    class="group relative bg-white p-6 rounded-3xl shadow-sm border border-slate-200 hover:border-amber-500/50 transition-all hover:shadow-2xl hover:shadow-amber-500/10 hover:-translate-y-1 overflow-hidden text-left"
+                >
+                    <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <svg class="w-20 h-20" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1s-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                        </svg>
+                    </div>
+                    
+                    <div class="relative z-10">
+                        <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 mb-5 group-hover:scale-110 transition-transform group-hover:bg-amber-600 group-hover:text-white shadow-sm shadow-amber-100">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-800 mb-2">Perjanjian</h3>
+                        <p class="text-slate-500 text-xs leading-relaxed mb-4">Perjanjian Kerja Sama (PKS).</p>
+                        <div class="flex items-center text-amber-600 font-semibold text-xs group-hover:gap-2 transition-all">
+                            Mulai Buat 
+                            <svg class="w-3 h-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                        </div>
+                    </div>
+                </button>
+
+                <!-- Card 4: Stats -->
                 <div 
                     x-show="currentUser?.role === 'user'"
-                    class="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 p-8 rounded-3xl shadow-xl shadow-slate-900/20 text-white relative overflow-hidden"
+                    class="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 p-6 rounded-3xl shadow-xl shadow-slate-900/20 text-white relative overflow-hidden"
                 >
                     <div class="absolute -bottom-8 -right-8 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl"></div>
                     <div class="relative z-10 h-full flex flex-col justify-between">
                         <div>
-                            <div class="text-slate-400 text-sm font-bold uppercase tracking-widest mb-1">Total Dokumen</div>
-                            <div class="text-5xl font-black tracking-tight" x-text="filteredDocs.length"></div>
+                            <div class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Total Dokumen</div>
+                            <div class="text-4xl font-black tracking-tight" x-text="filteredDocs.length"></div>
                         </div>
-                        <div class="mt-8 flex flex-col gap-3">
-                            <div class="flex items-center justify-between text-sm">
-                                <span class="text-slate-400">Telah Disetujui</span>
+                        <div class="mt-4 flex flex-col gap-2">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-slate-400">Disetujui</span>
                                 <span class="font-bold text-emerald-400" x-text="filteredDocs.filter(d => d.status === 'approved').length"></span>
                             </div>
-                            <div class="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                            <div class="w-full bg-white/5 h-1 rounded-full overflow-hidden">
                                 <div class="bg-emerald-400 h-full rounded-full transition-all duration-500" :style="'width: ' + (filteredDocs.length > 0 ? (filteredDocs.filter(d => d.status === 'approved').length / filteredDocs.length * 100) : 0) + '%'"></div>
-                            </div>
-                            <div class="flex items-center justify-between text-sm mt-1">
-                                <span class="text-slate-400">Dalam Proses</span>
-                                <span class="font-bold text-amber-400" x-text="filteredDocs.filter(d => d.status === 'pending_review').length"></span>
                             </div>
                         </div>
                     </div>
@@ -367,8 +391,12 @@
                             <tr class="hover:bg-slate-50/80 transition-colors group">
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
-                                        <div :class="doc.type === 'nota' ? 'bg-indigo-50 text-indigo-600' : 'bg-emerald-50 text-emerald-600'" class="w-10 h-10 rounded-lg flex items-center justify-center text-lg font-bold flex-shrink-0">
-                                            <span x-text="doc.type === 'nota' ? 'N' : 'S'"></span>
+                                        <div :class="{
+                                                'bg-indigo-50 text-indigo-600': doc.type === 'nota',
+                                                'bg-emerald-50 text-emerald-600': doc.type === 'sppd',
+                                                'bg-amber-50 text-amber-600': doc.type === 'perj'
+                                             }" class="w-10 h-10 rounded-lg flex items-center justify-center text-lg font-bold flex-shrink-0">
+                                            <span x-text="doc.type === 'nota' ? 'N' : (doc.type === 'sppd' ? 'S' : 'P')"></span>
                                         </div>
                                         <div>
                                             <div class="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors" x-text="doc.title"></div>

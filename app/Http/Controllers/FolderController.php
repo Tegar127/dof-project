@@ -32,7 +32,12 @@ class FolderController extends Controller
         $types = Document::forUser($user)->distinct()->pluck('type');
         
         foreach ($types as $type) {
-            $folderName = ($type === 'nota' ? 'Nota Dinas' : 'Surat Perintah (SPPD)');
+            $folderName = match($type) {
+                'nota' => 'Nota Dinas',
+                'sppd' => 'Surat Perintah (SPPD)',
+                'perj' => 'Perjanjian Kerja Sama',
+                default => ucfirst($type),
+            };
             Folder::firstOrCreate(
                 ['name' => $folderName],
                 ['type' => 'category']

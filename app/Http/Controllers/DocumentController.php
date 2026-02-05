@@ -41,7 +41,7 @@ class DocumentController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'type' => 'required|in:nota,sppd',
+            'type' => 'required|in:nota,sppd,perj',
             'status' => 'sometimes|string',
             'content_data' => 'sometimes|array',
             'history_log' => 'sometimes|array',
@@ -224,7 +224,17 @@ class DocumentController extends Controller
                     'funding' => 'Pembebanan Biaya',
                     'basis' => 'Dasar',
                     'remembers' => 'Mengingat',
-                    'ccs' => 'Tembusan'
+                    'ccs' => 'Tembusan',
+                    'about' => 'Tentang',
+                    'day' => 'Hari',
+                    'dateWritten' => 'Tanggal (Teks)',
+                    'party1Name' => 'Pihak 1: Nama',
+                    'party1Pos' => 'Pihak 1: Jabatan',
+                    'party1Auth' => 'Pihak 1: Dasar Hukum',
+                    'party2Name' => 'Pihak 2: Nama',
+                    'party2Info' => 'Pihak 2: Info/Alamat',
+                    'points' => 'Poin-poin Perjanjian',
+                    'paraf' => 'Tabel Paraf'
                 ];
 
                 $diffs = [];
