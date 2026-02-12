@@ -363,7 +363,7 @@
                 </div>
 
                 <!-- Advanced Filters -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-slate-50">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-slate-50">
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Tipe Dokumen</label>
                         <select x-model="typeFilter" @change="filterDocuments()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500/20 outline-none">
@@ -371,15 +371,6 @@
                             <option value="nota">Nota Dinas</option>
                             <option value="sppd">SPPD</option>
                             <option value="perj">Perjanjian</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1">Kategori (Folder)</label>
-                        <select x-model="selectedFolder" @change="filterDocuments()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500/20 outline-none">
-                            <option value="">Semua Kategori</option>
-                            <template x-for="folder in folders" :key="folder.id">
-                                <option :value="folder.id" x-text="folder.name"></option>
-                            </template>
                         </select>
                     </div>
                     <div>
