@@ -21,6 +21,7 @@ class Document extends Model
         'content_data',
         'history_log',
         'feedback',
+        'forward_note',
         'target_role',
         'target_value',
         'deadline',

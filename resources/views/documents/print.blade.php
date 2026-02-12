@@ -156,15 +156,18 @@
 
             <div style="margin-bottom: 15px;">
                 <p style="margin-bottom: 5px;">Berdasarkan:</p>
-                <ol class="list-numbered text-justify">
-                    @forelse($document->content_data['basis'] ?? [] as $item)
+                <div class="text-justify">
+                    @forelse($document->content_data['basis'] ?? [] as $index => $item)
                         @if(!empty($item))
-                            <li>{{ $item }}</li>
+                            <div style="display: flex; margin-bottom: 4px;">
+                                <div style="width: 25px; flex-shrink: 0; font-weight: bold;">{{ $numberingHelper($index, $document->content_data['basisStyle'] ?? '1.') }}</div>
+                                <div style="flex-grow: 1;">{{ $item }}</div>
+                            </div>
                         @endif
                     @empty
-                        <li style="list-style: none">...</li>
+                        <p>...</p>
                     @endforelse
-                </ol>
+                </div>
             </div>
 
             <div class="text-justify" style="margin-bottom: 20px; white-space: pre-wrap;">{{ $document->content_data['content'] ?? '...' }}</div>
@@ -212,15 +215,18 @@
                     <td class="sppd-label">Mengingat</td>
                     <td class="sppd-colon">:</td>
                     <td>
-                        <ol class="list-numbered" style="margin: 0; padding-left: 20px;">
-                            @forelse($document->content_data['remembers'] ?? [] as $item)
+                        <div class="text-justify">
+                            @forelse($document->content_data['remembers'] ?? [] as $index => $item)
                                 @if(!empty($item))
-                                    <li>{{ $item }}</li>
+                                    <div style="display: flex; margin-bottom: 4px;">
+                                        <div style="width: 25px; flex-shrink: 0; font-weight: bold;">{{ $numberingHelper($index, $document->content_data['remembersStyle'] ?? '1.') }}</div>
+                                        <div style="flex-grow: 1;">{{ $item }}</div>
+                                    </div>
                                 @endif
                             @empty
-                                <li style="list-style: none">...</li>
+                                <p>...</p>
                             @endforelse
-                        </ol>
+                        </div>
                     </td>
                 </tr>
             </table>
@@ -280,15 +286,18 @@
             
             <div style="margin-top: 30px; font-size: 10pt;">
                 <p class="font-bold underline" style="margin-bottom: 5px;">Tembusan:</p>
-                <ol class="list-numbered" style="margin-left: 20px;">
-                    @forelse($document->content_data['ccs'] ?? [] as $item)
+                <div style="margin-left: 20px;">
+                    @forelse($document->content_data['ccs'] ?? [] as $index => $item)
                         @if(!empty($item))
-                            <li>{{ $item }}</li>
+                            <div style="display: flex; margin-bottom: 4px;">
+                                <div style="width: 25px; flex-shrink: 0; font-weight: bold;">{{ $numberingHelper($index, $document->content_data['ccsStyle'] ?? '1.') }}</div>
+                                <div style="flex-grow: 1;">{{ $item }}</div>
+                            </div>
                         @endif
                     @empty
-                        <li style="list-style: none">...</li>
+                        <p>...</p>
                     @endforelse
-                </ol>
+                </div>
             </div>
         @elseif($document->type === 'perj')
             <!-- PERJANJIAN KERJA SAMA -->
@@ -335,10 +344,28 @@
 
                 <p style="margin-bottom: 15px;">Pihak Kesatu dan Pihak Kedua selanjutnya secara bersama-sama disebut sebagai <span class="font-bold">"Para Pihak"</span> dan masing-masing disebut <span class="font-bold">"Pihak"</span>, serta dalam kedudukannya sebagaimana tersebut di atas, terlebih dulu menerangkan hal-hal sebagai berikut:</p>
 
+                @php
+                    $numberingHelper = function($i, $s) {
+                        $s = $s ?: 'A.';
+                        if ($s === 'a.') return chr(97 + $i) . '.';
+                        if ($s === 'A.') return chr(65 + $i) . '.';
+                        if ($s === 'a)') return chr(97 + $i) . ')';
+                        if ($s === 'A)') return chr(65 + $i) . ')';
+                        if ($s === '1.') return ($i + 1) . '.';
+                        if ($s === 'I.') {
+                            $roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+                            return ($roman[$i] ?? ($i + 1)) . '.';
+                        }
+                        if ($s === '-') return '-';
+                        if ($s === '*') return '•';
+                        return chr(65 + $i) . '.';
+                    };
+                @endphp
+
                 @foreach($document->content_data['points'] ?? [] as $index => $point)
                     @if(!empty($point))
                         <div style="display: flex; margin-top: 15px;">
-                            <div style="width: 30px; flex-shrink: 0; font-bold;">{{ chr(65 + $index) }}.</div>
+                            <div style="width: 35px; flex-shrink: 0; font-bold;">{{ $numberingHelper($index, $document->content_data['pointsStyle'] ?? 'A.') }}</div>
                             <div style="flex-grow: 1;">{{ $point }}</div>
                         </div>
                     @endif
@@ -346,20 +373,20 @@
 
                 <!-- Paraf Table (Dinamis) -->
                 <div class="paraf-container">
-                    <table class="paraf-table">
+                    <table class="paraf-table" style="margin-left: auto; width: auto; min-width: 300px;">
                         <tr>
                             <td rowspan="3" class="col-paraf-label">Paraf</td>
-                            @foreach($document->content_data['paraf'] ?? [] as $paraf)
+                            @foreach(array_reverse($document->content_data['paraf'] ?? []) as $paraf)
                                 <td class="cell-width">{{ $paraf['code'] ?? '...' }}</td>
                             @endforeach
                         </tr>
                         <tr class="row-name">
-                            @foreach($document->content_data['paraf'] ?? [] as $paraf)
+                            @foreach(array_reverse($document->content_data['paraf'] ?? []) as $paraf)
                                 <td>{{ $paraf['name'] ?? '...' }}</td>
                             @endforeach
                         </tr>
                         <tr class="row-signature">
-                            @foreach($document->content_data['paraf'] ?? [] as $paraf)
+                            @foreach(array_reverse($document->content_data['paraf'] ?? []) as $paraf)
                                 <td style="text-align: center; vertical-align: middle; height: 65px;">
                                     @if(!empty($paraf['signature']))
                                         <img src="{{ $paraf['signature'] }}" style="max-height: 60px; display: block; margin: 0 auto;">

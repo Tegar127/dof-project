@@ -523,6 +523,7 @@ window.editorApp = function () {
                     type: this.document.type,
                     status: this.document.status,
                     content_data: this.document.content_data,
+                    forward_note: this.document.forward_note,
                     deadline: this.document.deadline || null,
                     approvals: this.document.approvals,
                     target: {
@@ -639,6 +640,23 @@ window.editorApp = function () {
                 hour: '2-digit',
                 minute: '2-digit'
             });
+        },
+
+        formatNumbering(index, style) {
+            const styles = {
+                'a.': (i) => String.fromCharCode(97 + i) + '.',
+                'A.': (i) => String.fromCharCode(65 + i) + '.',
+                'a)': (i) => String.fromCharCode(97 + i) + ')',
+                'A)': (i) => String.fromCharCode(65 + i) + ')',
+                '1.': (i) => (i + 1) + '.',
+                'I.': (i) => {
+                    const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+                    return (roman[i] || (i + 1)) + '.';
+                },
+                '-': () => '-',
+                '*': () => '•'
+            };
+            return (styles[style] || styles['A.'])(index);
         }
     }
 }

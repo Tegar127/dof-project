@@ -138,6 +138,7 @@ class DocumentController extends Controller
             'content_data' => 'sometimes|array',
             'history_log' => 'sometimes|array',
             'feedback' => 'sometimes|string|nullable',
+            'forward_note' => 'sometimes|string|nullable',
             'target' => 'sometimes|array',
             'folder_id' => 'nullable|exists:folders,id',
             'deadline' => 'nullable|date',
@@ -162,6 +163,10 @@ class DocumentController extends Controller
 
         if (array_key_exists('feedback', $validated)) {
             $updateData['feedback'] = $validated['feedback'];
+        }
+
+        if (array_key_exists('forward_note', $validated)) {
+            $updateData['forward_note'] = $validated['forward_note'];
         }
 
         if (isset($validated['target'])) {

@@ -343,6 +343,16 @@
                             <span class="block text-xs text-slate-500">Kirim ke reviewer untuk diperiksa.</span>
                         </div>
                     </label>
+
+                    <div class="pt-2">
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2 pl-1">Catatan Terusan (Opsional)</label>
+                        <textarea 
+                            x-model="document.forward_note" 
+                            rows="3" 
+                            class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:bg-white focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all placeholder:text-slate-300" 
+                            placeholder="Tambahkan pesan atau instruksi terusan..."
+                        ></textarea>
+                    </div>
                 </div>
 
                 <div class="flex gap-3 pt-4">
@@ -480,6 +490,26 @@
             <div class="p-6 space-y-6">
 
                 <!-- Notifications / Alerts -->
+                <template x-if="document.forward_note">
+                    <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex gap-4 shadow-sm">
+                        <div class="text-indigo-500 shrink-0">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div class="w-full">
+                            <h4 class="text-sm font-bold text-indigo-900">Teks Terusan</h4>
+                            <div x-show="!isEditable()" class="text-xs text-indigo-700 mt-1 leading-relaxed italic" x-text="document.forward_note"></div>
+                            <textarea 
+                                x-show="isEditable()" 
+                                x-model="document.forward_note" 
+                                class="w-full mt-2 p-2 bg-white border border-indigo-200 rounded text-xs text-indigo-700 italic focus:ring-1 focus:ring-indigo-400 outline-none" 
+                                rows="3"
+                            ></textarea>
+                        </div>
+                    </div>
+                </template>
+
                 <template x-if="document.status === 'needs_revision' && currentUser?.role === 'user' && document.author_id == currentUser.id">
                     <div class="bg-amber-50 border border-amber-100 rounded-xl p-4 flex gap-4 shadow-sm">
                         <div class="text-amber-500 shrink-0">
@@ -559,13 +589,23 @@
 
                                 <!-- Dynamic List: Basis -->
                                 <div class="space-y-2">
-                                    <label class="text-xs text-slate-500 font-medium ml-1">Dasar / Basis (Poin-poin)</label>
+                                    <div class="flex justify-between items-center">
+                                        <label class="text-xs text-slate-500 font-medium ml-1">Dasar / Basis (Poin-poin)</label>
+                                        <select x-model="document.content_data.basisStyle" class="text-[10px] p-1 border rounded bg-white outline-none">
+                                            <option value="1.">1. 2. 3.</option>
+                                            <option value="a.">a. b. c.</option>
+                                            <option value="A.">A. B. C.</option>
+                                            <option value="I.">I. II. III.</option>
+                                            <option value="-">- Dash</option>
+                                            <option value="*">• Bullet</option>
+                                        </select>
+                                    </div>
                                     <div class="space-y-2">
                                         <template x-for="(item, index) in document.content_data.basis" :key="index">
                                             <div class="flex gap-2 group">
                                                 <div class="relative w-full">
-                                                     <span class="absolute left-3 top-2.5 text-xs text-slate-400 font-mono" x-text="index + 1 + '.'"></span>
-                                                    <input type="text" x-model="document.content_data.basis[index]" class="form-input-styled pl-8" placeholder="Isi poin...">
+                                                     <span class="absolute left-3 top-2.5 text-xs text-slate-400 font-mono" x-text="formatNumbering(index, document.content_data.basisStyle || '1.')"></span>
+                                                    <input type="text" x-model="document.content_data.basis[index]" class="form-input-styled pl-10" placeholder="Isi poin...">
                                                 </div>
                                                 <button @click="removeListItem('basis', index)" class="text-slate-300 hover:text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors">
                                                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -693,13 +733,22 @@
 
                                 <!-- Dynamic List: Mengingat -->
                                 <div class="space-y-2">
-                                    <label class="text-xs text-slate-500 font-medium ml-1">Mengingat (Daftar Peraturan)</label>
+                                    <div class="flex justify-between items-center">
+                                        <label class="text-xs text-slate-500 font-medium ml-1">Mengingat (Daftar Peraturan)</label>
+                                        <select x-model="document.content_data.remembersStyle" class="text-[10px] p-1 border rounded bg-white outline-none">
+                                            <option value="1.">1. 2. 3.</option>
+                                            <option value="a.">a. b. c.</option>
+                                            <option value="A.">A. B. C.</option>
+                                            <option value="-">- Dash</option>
+                                            <option value="*">• Bullet</option>
+                                        </select>
+                                    </div>
                                     <div class="space-y-2">
                                         <template x-for="(item, index) in document.content_data.remembers" :key="index">
                                             <div class="flex gap-2 group">
                                                 <div class="relative w-full">
-                                                    <span class="absolute left-3 top-2.5 text-xs text-slate-400 font-mono" x-text="index + 1 + '.'"></span>
-                                                    <input type="text" x-model="document.content_data.remembers[index]" class="form-input-styled pl-8" placeholder="Peraturan...">
+                                                    <span class="absolute left-3 top-2.5 text-xs text-slate-400 font-mono" x-text="formatNumbering(index, document.content_data.remembersStyle || '1.')"></span>
+                                                    <input type="text" x-model="document.content_data.remembers[index]" class="form-input-styled pl-10" placeholder="Peraturan...">
                                                 </div>
                                                 <button @click="removeListItem('remembers', index)" class="text-slate-300 hover:text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors">
                                                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -816,13 +865,20 @@
 
                                 <!-- Dynamic List: Tembusan -->
                                 <div class="space-y-2 pt-2 border-t border-dashed border-slate-200">
-                                    <label class="text-xs text-slate-500 font-medium ml-1">Tembusan</label>
+                                    <div class="flex justify-between items-center">
+                                        <label class="text-xs text-slate-500 font-medium ml-1">Tembusan</label>
+                                        <select x-model="document.content_data.ccsStyle" class="text-[10px] p-1 border rounded bg-white outline-none">
+                                            <option value="1.">1. 2. 3.</option>
+                                            <option value="a.">a. b. c.</option>
+                                            <option value="-">- Dash</option>
+                                        </select>
+                                    </div>
                                      <div class="space-y-2">
                                         <template x-for="(item, index) in document.content_data.ccs" :key="index">
                                             <div class="flex gap-2 group">
                                                  <div class="relative w-full">
-                                                    <span class="absolute left-3 top-2.5 text-xs text-slate-400 font-mono" x-text="index + 1 + '.'"></span>
-                                                    <input type="text" x-model="document.content_data.ccs[index]" class="form-input-styled pl-8" placeholder="Nama / Jabatan...">
+                                                    <span class="absolute left-3 top-2.5 text-xs text-slate-400 font-mono" x-text="formatNumbering(index, document.content_data.ccsStyle || '1.')"></span>
+                                                    <input type="text" x-model="document.content_data.ccs[index]" class="form-input-styled pl-10" placeholder="Nama / Jabatan...">
                                                 </div>
                                                 <button @click="removeListItem('ccs', index)" class="text-slate-300 hover:text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors">
                                                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -894,17 +950,29 @@
                         
                                                      <!-- Section: Points -->
                                                      <div class="space-y-4 pt-2">
-                                                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                                                            <span class="w-1 h-4 bg-amber-500 rounded-full"></span>
-                                                            Poin-poin Perjanjian
-                                                        </h3>
+                                                        <div class="flex justify-between items-center">
+                                                            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                                                <span class="w-1 h-4 bg-amber-500 rounded-full"></span>
+                                                                Poin-poin Perjanjian
+                                                            </h3>
+                                                            <select x-model="document.content_data.pointsStyle" class="text-[10px] p-1 border rounded bg-white outline-none">
+                                                                <option value="A.">A. B. C.</option>
+                                                                <option value="a.">a. b. c.</option>
+                                                                <option value="1.">1. 2. 3.</option>
+                                                                <option value="I.">I. II. III.</option>
+                                                                <option value="A)">A) B) C)</option>
+                                                                <option value="a)">a) b) c)</option>
+                                                                <option value="-">- Dash</option>
+                                                                <option value="*">• Bullet</option>
+                                                            </select>
+                                                        </div>
                         
                                                         <div class="space-y-2">
                                                             <template x-for="(item, index) in document.content_data.points" :key="index">
                                                                 <div class="flex gap-2 group">
                                                                     <div class="relative w-full">
-                                                                        <span class="absolute left-3 top-2.5 text-xs text-slate-400 font-bold" x-text="String.fromCharCode(65 + index) + '.'"></span>
-                                                                        <textarea x-model="document.content_data.points[index]" class="form-textarea-styled pl-8 text-xs" rows="2" placeholder="Isi poin..."></textarea>
+                                                                        <span class="absolute left-3 top-2.5 text-xs text-slate-400 font-bold" x-text="formatNumbering(index, document.content_data.pointsStyle || 'A.')"></span>
+                                                                        <textarea x-model="document.content_data.points[index]" class="form-textarea-styled pl-10 text-xs" rows="2" placeholder="Isi poin..."></textarea>
                                                                     </div>
                                                                     <button @click="removeListItem('points', index)" class="text-slate-300 hover:text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors">
                                                                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -1278,12 +1346,15 @@
 
                     <div class="mb-4">
                         <p class="mb-2">Berdasarkan:</p>
-                        <ol class="list-numbered text-justify">
-                            <template x-for="item in document.content_data.basis">
-                                <li x-text="item" class="mb-1 pl-1"></li>
+                        <ul class="list-none text-justify p-0 m-0">
+                            <template x-for="(item, index) in document.content_data.basis">
+                                <li class="mb-1 flex gap-2">
+                                    <span class="w-6 shrink-0 font-bold" x-text="formatNumbering(index, document.content_data.basisStyle || '1.')"></span>
+                                    <span x-text="item"></span>
+                                </li>
                             </template>
                             <li x-show="!document.content_data.basis?.length" style="list-style: none">...</li>
-                        </ol>
+                        </ul>
                     </div>
 
                     <div class="mb-8 text-justify leading-relaxed">
@@ -1344,12 +1415,15 @@
                             <td class="sppd-label">Mengingat</td>
                             <td class="sppd-colon">:</td>
                             <td>
-                                <ol class="list-numbered" style="margin-top: 0; margin-bottom: 0; padding-left: 15px;">
-                                    <template x-for="item in document.content_data.remembers">
-                                        <li x-text="item" class="mb-1"></li>
+                                <ul class="list-none p-0 m-0">
+                                    <template x-for="(item, index) in document.content_data.remembers">
+                                        <li class="mb-1 flex gap-2">
+                                            <span class="w-8 shrink-0 font-bold" x-text="formatNumbering(index, document.content_data.remembersStyle || '1.')"></span>
+                                            <span x-text="item"></span>
+                                        </li>
                                     </template>
                                     <li x-show="!document.content_data.remembers?.length" style="list-style: none">...</li>
-                                </ol>
+                                </ul>
                             </td>
                         </tr>
                     </table>
@@ -1415,18 +1489,17 @@
                     
                                             <p class="font-bold underline mb-1">Tembusan:</p>
                     
-                                            <ol class="list-numbered" style="margin-left: 15px;">
-                    
-                                                <template x-for="item in document.content_data.ccs">
-                    
-                                                    <li x-text="item" class="mb-1"></li>
-                    
+                                            <ul class="list-none p-0 m-0" style="margin-left: 15px;">
+                                                <template x-for="(item, index) in document.content_data.ccs">
+                                                    <li class="mb-1 flex gap-2">
+                                                        <span class="w-6 shrink-0 font-bold" x-text="formatNumbering(index, document.content_data.ccsStyle || '1.')"></span>
+                                                        <span x-text="item"></span>
+                                                    </li>
                                                 </template>
-                    
                                                 <li x-show="!document.content_data.ccs?.length" style="list-style: none">...</li>
+                                            </ul>
                     
-                                            </ol>
-                    
+                                        </div>
                                         </div>
                     
                                     </div>
@@ -1525,21 +1598,35 @@
                     
                     
                     
-                                        <div class="space-y-4">
+                                                                                <div class="space-y-4">
                     
-                                            <template x-for="(point, index) in document.content_data.points">
                     
-                                                <div class="flex items-start">
                     
-                                                    <div class="w-8 flex-shrink-0 font-bold" x-text="String.fromCharCode(65 + index) + '.'"></div>
+                                                                                    <template x-for="(point, index) in document.content_data.points">
                     
-                                                    <div class="flex-grow text-justify" x-text="point"></div>
                     
-                                                </div>
                     
-                                            </template>
+                                                                                        <div class="flex items-start">
                     
-                                        </div>
+                    
+                    
+                                                                                            <div class="w-10 flex-shrink-0 font-bold" x-text="formatNumbering(index, document.content_data.pointsStyle || 'A.')"></div>
+                    
+                    
+                    
+                                                                                            <div class="flex-grow text-justify" x-text="point"></div>
+                    
+                    
+                    
+                                                                                        </div>
+                    
+                    
+                    
+                                                                                    </template>
+                    
+                    
+                    
+                                                                                </div>
                     
                     
                     
@@ -1563,7 +1650,7 @@
                     
                     
                     
-                                                                                                                                    <template x-for="(p, index) in document.content_data.paraf" :key="'code-'+index">
+                                                                                                                                    <template x-for="(p, index) in [...document.content_data.paraf].reverse()" :key="'code-'+index">
                     
                     
                     
@@ -1583,7 +1670,7 @@
                     
                     
                     
-                                                                                                                                    <template x-for="(p, index) in document.content_data.paraf" :key="'name-'+index">
+                                                                                                                                    <template x-for="(p, index) in [...document.content_data.paraf].reverse()" :key="'name-'+index">
                     
                     
                     
@@ -1603,11 +1690,11 @@
                     
                     
                     
-                                                                                                                                    <template x-for="(p, index) in document.content_data.paraf" :key="'sig-'+index">
+                                                                                                                                    <template x-for="(p, index) in [...document.content_data.paraf].reverse()" :key="'sig-'+index">
                     
                     
                     
-                                                                                                                                        <td :id="'paraf-cell-' + index" class="align-middle h-[65px] transition-all duration-300">
+                                                                                                                                        <td :id="'paraf-cell-' + (document.content_data.paraf.length - 1 - index)" class="align-middle h-[65px] transition-all duration-300">
                     
                     
                     

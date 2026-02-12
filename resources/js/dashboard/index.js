@@ -6,6 +6,9 @@ window.dashboardApp = function () {
         filteredDocs: [],
         searchTerm: '',
         selectedFolder: null,
+        typeFilter: 'all',
+        dateFrom: '',
+        dateTo: '',
         deadlineFilter: 'all', // all, upcoming, overdue, none
         showCreateModal: false,
         showDeleteModal: false,
@@ -62,6 +65,9 @@ window.dashboardApp = function () {
             this.$watch('searchTerm', () => this.filterDocuments());
             this.$watch('selectedFolder', () => this.filterDocuments());
             this.$watch('deadlineFilter', () => this.filterDocuments());
+            this.$watch('typeFilter', () => this.filterDocuments());
+            this.$watch('dateFrom', () => this.filterDocuments());
+            this.$watch('dateTo', () => this.filterDocuments());
 
             // Listen for folder events
             window.addEventListener('folder-selected', (e) => {
@@ -182,7 +188,24 @@ window.dashboardApp = function () {
 
             // Filter by folder
             if (this.selectedFolder) {
-                docs = docs.filter(d => d.folder_id === this.selectedFolder);
+                docs = docs.filter(d => d.folder_id == this.selectedFolder);
+            }
+
+            // Filter by type
+            if (this.typeFilter !== 'all') {
+                docs = docs.filter(d => d.type === this.typeFilter);
+            }
+
+            // Filter by date range
+            if (this.dateFrom) {
+                const from = new Date(this.dateFrom);
+                from.setHours(0, 0, 0, 0);
+                docs = docs.filter(d => new Date(d.created_at) >= from);
+            }
+            if (this.dateTo) {
+                const to = new Date(this.dateTo);
+                to.setHours(23, 59, 59, 999);
+                docs = docs.filter(d => new Date(d.created_at) <= to);
             }
 
             // Filter by deadline
