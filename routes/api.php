@@ -37,6 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Document routes (all authenticated users)
     Route::apiResource('documents', DocumentController::class);
+    Route::get('/users', [App\Http\Controllers\UserController::class, 'index']);
     Route::get('/groups', [GroupController::class, 'index']);
     Route::get('/groups/{group}', [GroupController::class, 'show']);
     
@@ -56,6 +57,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Folders
     Route::apiResource('folders', FolderController::class);
     Route::post('/documents/{id}/move', [FolderController::class, 'moveDocument']);
+
+    // Document Distributions
+    Route::get('/distributions', [App\Http\Controllers\DocumentDistributionController::class, 'index']);
+    Route::post('/documents/{document}/distribute', [App\Http\Controllers\DocumentDistributionController::class, 'store']);
+    Route::get('/distributions/{document}', [App\Http\Controllers\DocumentDistributionController::class, 'show']);
 
     // Admin only routes
     Route::middleware('role:admin')->group(function () {

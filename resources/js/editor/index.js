@@ -8,26 +8,25 @@ window.editorApp = function () {
             // Admin always editable
             if (this.currentUser.role === 'admin') return true;
 
-            // Reviewer can edit if it's pending review or if they are the author
+            // Final check: if approved, sent, or received, NO ONE else can edit
+            const status = typeof this.document.status === 'object' ? this.document.status.value : this.document.status;
+            const isFinal = ['approved', 'sent', 'received'].includes(status);
+            if (isFinal) return false;
+
+            // Reviewer logic
             if (this.currentUser.role === 'reviewer') {
-                if (this.document.status === 'pending_review' || this.document.status === 'approved') return true;
-                if (this.document.author_id == this.currentUser.id) return true;
-                return true; // Reviewers are generally allowed to edit for now
+                return true; // Reviewers can edit for review purposes if not final
             }
 
             // User (Staff) logic
             if (this.currentUser.role === 'user') {
-                // If document is approved, it's locked for everyone (except maybe admin, handled above)
-                if (this.document.status === 'approved') return false;
-
                 // If current user is the author (Sender)
                 if (this.document.author_id && this.document.author_id == this.currentUser.id) {
-                    const status = this.document.status;
-                    // Authors can only edit drafts, revisions, or if returned (received)
-                    return status === 'draft' || status === 'needs_revision' || status === 'received';
+                    // Authors can only edit drafts or revisions
+                    return status === 'draft' || status === 'needs_revision';
                 }
                 
-                // If not author (Receiver), allow edit/forward
+                // If not author (Receiver)
                 return true;
             }
 

@@ -133,6 +133,20 @@ class DocumentController extends Controller
      */
     public function update(Request $request, Document $document)
     {
+        $user = Auth::user();
+
+        // Prevent editing final documents
+        if ($document->isFinal() && !$request->has('status') && !$request->has('target')) {
+            // We allow updating status (e.g. from APPROVED to SENT during distribution) 
+            // and target, but NOT content_data
+            if ($request->has('content_data')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dokumen final tidak dapat diubah kontennya.',
+                ], 422);
+            }
+        }
+
         $validated = $request->validate([
             'status' => 'sometimes|string',
             'content_data' => 'sometimes|array',

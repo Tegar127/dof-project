@@ -19,6 +19,16 @@ window.dashboardApp = function () {
         alertMessage: '',
         folders: [],
         
+        // Distribution Monitoring
+        distributions: [],
+        showDistributionModal: false,
+        selectedDocForDist: null,
+        recipientType: 'all',
+        recipientId: null,
+        distributionNotes: '',
+        allUsers: [],
+        allGroups: [],
+        
         // Notifications
         notifications: [],
         showNotifications: false,
@@ -46,12 +56,6 @@ window.dashboardApp = function () {
             this.currentUser = JSON.parse(userData);
             this.token = token;
 
-            // Redirect admin to admin panel
-            if (this.currentUser.role === 'admin') {
-                window.location.href = '/admin';
-                return;
-            }
-
             // Refresh user data (await to ensure role is up to date)
             await this.refreshUserData();
 
@@ -59,6 +63,8 @@ window.dashboardApp = function () {
             await this.loadDocuments();
             await this.loadFolders();
             await this.loadNotifications();
+            await this.loadDistributions();
+            await this.loadRecipients();
             await this.autoOrganize();
 
             // Watch filters
@@ -445,6 +451,95 @@ window.dashboardApp = function () {
                 staff: 'Staff'
             };
             return labels[position] || position || '-';
+        },
+
+        async loadDistributions() {
+            try {
+                const response = await fetch('/api/distributions', {
+                    headers: {
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    this.distributions = await response.json();
+                }
+            } catch (error) {
+                console.error('Error loading distributions:', error);
+            }
+        },
+
+        async loadRecipients() {
+            try {
+                // Load users
+                const userRes = await fetch('/api/users', {
+                    headers: {
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json'
+                    }
+                });
+                if (userRes.ok) this.allUsers = await userRes.json();
+
+                // Load groups
+                const groupRes = await fetch('/api/groups', {
+                    headers: {
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json'
+                    }
+                });
+                if (groupRes.ok) this.allGroups = await groupRes.json();
+            } catch (error) {
+                console.error('Error loading recipients:', error);
+            }
+        },
+
+        openDistributeModal(doc) {
+            this.selectedDocForDist = doc;
+            this.recipientType = 'all';
+            this.recipientId = null;
+            this.distributionNotes = '';
+            this.showDistributionModal = true;
+        },
+
+        async confirmDistribute() {
+            if (!this.selectedDocForDist) return;
+            if (this.recipientType !== 'all' && !this.recipientId) {
+                alert('Penerima harus dipilih!');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/documents/${this.selectedDocForDist.id}/distribute`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        recipients: [{
+                            type: this.recipientType,
+                            id: this.recipientId
+                        }],
+                        notes: this.distributionNotes
+                    })
+                });
+
+                if (response.ok) {
+                    this.showDistributionModal = false;
+                    this.alertMessage = 'Dokumen berhasil didistribusikan!';
+                    this.showSuccessModal = true;
+                    await this.loadDistributions();
+                    await this.loadDocuments();
+                } else {
+                    const data = await response.json();
+                    alert(data.message || 'Gagal mendistribusikan dokumen.');
+                }
+            } catch (error) {
+                console.error('Error distributing document:', error);
+                alert('Terjadi kesalahan saat mendistribusikan dokumen.');
+            }
         }
     }
 }

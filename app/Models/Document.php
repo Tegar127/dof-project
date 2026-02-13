@@ -39,6 +39,18 @@ class Document extends Model
     }
 
     /**
+     * Check if document is in a final state (read-only).
+     */
+    public function isFinal(): bool
+    {
+        return in_array($this->status, [
+            DocumentStatus::APPROVED,
+            DocumentStatus::SENT,
+            DocumentStatus::RECEIVED
+        ]);
+    }
+
+    /**
      * Get the author of the document.
      */
     public function author()
@@ -51,6 +63,10 @@ class Document extends Model
      */
     public function scopeForUser($query, $user)
     {
+        if ($user->isAdmin()) {
+            return $query; // Admin can see everything
+        }
+
         if ($user->role === 'reviewer') {
             return $query->where('target_role', 'dispo')
                          ->whereIn('status', [DocumentStatus::PENDING_REVIEW, DocumentStatus::APPROVED]);
@@ -58,8 +74,9 @@ class Document extends Model
 
         // Get all groups the user belongs to (Primary + Extra)
         $groupNames = $user->groups()->pluck('name')->push($user->group_name)->filter()->unique()->toArray();
+        $groupIds = $user->groups()->pluck('groups.id')->toArray();
 
-        return $query->where(function ($q) use ($user, $groupNames) {
+        return $query->where(function ($q) use ($user, $groupNames, $groupIds) {
             $q->where('author_id', $user->id)
               ->orWhere(function ($sq) use ($groupNames) {
                   $sq->where('target_role', 'group')
@@ -68,6 +85,17 @@ class Document extends Model
               })
               ->orWhereHas('logs', function ($lq) use ($user) {
                   $lq->where('user_id', $user->id);
+              })
+              ->orWhereHas('distributions', function ($dq) use ($user, $groupIds) {
+                  $dq->where('recipient_type', 'all')
+                    ->orWhere(function ($sq) use ($groupIds) {
+                        $sq->where('recipient_type', 'group')
+                           ->whereIn('recipient_id', $groupIds);
+                    })
+                    ->orWhere(function ($sq) use ($user) {
+                        $sq->where('recipient_type', 'user')
+                           ->where('recipient_id', $user->id);
+                    });
               });
         });
     }
@@ -118,6 +146,14 @@ class Document extends Model
     public function versions()
     {
         return $this->hasMany(DocumentVersion::class)->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Get distributions for this document.
+     */
+    public function distributions()
+    {
+        return $this->hasMany(DocumentDistribution::class);
     }
 
     /**

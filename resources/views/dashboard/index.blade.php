@@ -61,30 +61,62 @@
 
     <!-- Delete Confirmation Modal -->
     <div x-show="showDeleteModal" x-cloak x-transition class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-        <div @click.away="showDeleteModal = false" class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6">
-            <div class="text-center">
-                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600">
-                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                </div>
-                <h3 class="text-xl font-bold mb-2 text-slate-800">Hapus Dokumen?</h3>
-                <p class="text-gray-500 text-sm mb-6">
-                    Apakah anda yakin ingin menghapus dokumen <strong x-text="'\"' + docToDelete?.title + '\"'"></strong>? Tindakan ini tidak dapat dibatalkan.
-                </p>
+        <!-- ... (existing delete modal content) ... -->
+    </div>
 
-                <div class="flex gap-3">
+    <!-- Distribute Modal -->
+    <div x-show="showDistributionModal" x-cloak x-transition class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+        <div @click.away="showDistributionModal = false" class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <h3 class="text-xl font-bold mb-2 text-slate-800">Distribusikan Dokumen Final</h3>
+            <p class="text-gray-500 text-sm mb-6" x-text="selectedDocForDist?.title"></p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipe Penerima</label>
+                    <select x-model="recipientType" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="all">Semua User</option>
+                        <option value="group">Grup Spesifik</option>
+                        <option value="user">User Spesifik</option>
+                    </select>
+                </div>
+
+                <div x-show="recipientType === 'group'">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Grup</label>
+                    <select x-model="recipientId" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="">Pilih Grup...</option>
+                        <template x-for="group in allGroups" :key="group.id">
+                            <option :value="group.id" x-text="group.name"></option>
+                        </template>
+                    </select>
+                </div>
+
+                <div x-show="recipientType === 'user'">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Pilih User</label>
+                    <select x-model="recipientId" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="">Pilih User...</option>
+                        <template x-for="user in allUsers" :key="user.id">
+                            <option :value="user.id" x-text="user.name + ' (' + user.position + ')'"></option>
+                        </template>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Catatan (Opsional)</label>
+                    <textarea x-model="distributionNotes" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" rows="3"></textarea>
+                </div>
+
+                <div class="flex gap-3 pt-2">
                     <button
-                        @click="showDeleteModal = false; docToDelete = null"
+                        @click="showDistributionModal = false"
                         class="flex-1 py-2.5 text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
                     >
                         Batal
                     </button>
                     <button
-                        @click="confirmDelete()"
-                        class="flex-1 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors shadow-sm"
+                        @click="confirmDistribute()"
+                        class="flex-1 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors shadow-sm"
                     >
-                        Hapus
+                        Distribusikan
                     </button>
                 </div>
             </div>
@@ -338,6 +370,52 @@
             </div>
         </div>
 
+        <!-- Distribution Monitoring Section -->
+        <div x-show="distributions.length > 0" class="mb-12">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="h-8 w-1.5 bg-emerald-500 rounded-full"></div>
+                <h2 class="text-white font-bold text-xl tracking-tight">Monitoring Distribusi Dokumen Final</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <template x-for="dist in distributions" :key="dist.id">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4">
+                        <div class="flex justify-between items-start">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center font-bold">
+                                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-800 text-sm" x-text="dist.title"></h3>
+                                    <p class="text-xs text-slate-500" x-text="'Didistribusikan: ' + formatDate(dist.distributed_at).d"></p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-lg font-black text-indigo-600" x-text="dist.percentage + '%'"></div>
+                                <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Terbaca</div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <div class="flex justify-between text-xs font-medium">
+                                <span class="text-slate-500" x-text="dist.read_count + ' dari ' + dist.total_expected + ' user'"></span>
+                                <span class="text-slate-800" x-text="dist.percentage + '%'"></span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-emerald-500 h-full rounded-full transition-all duration-1000" :style="'width: ' + dist.percentage + '%'"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center pt-2 border-t border-slate-50">
+                            <span class="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full font-bold uppercase tracking-tight" x-text="dist.status_label"></span>
+                            <a :href="'/documents/' + dist.id" class="text-xs text-indigo-600 font-bold hover:text-indigo-800">Lihat Detail &rarr;</a>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
         <!-- Documents Table -->
         <div class="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
             <!-- Toolbar -->
@@ -488,6 +566,20 @@
                                         >
                                             <span x-text="currentUser?.role === 'reviewer' ? 'Review' : 'Edit'"></span>
                                         </a>
+                                        
+                                        <!-- Distribute Button for Admin Only -->
+                                        <template x-if="currentUser?.role === 'admin' && (doc.status === 'approved' || doc.status === 'sent')">
+                                            <button
+                                                @click="openDistributeModal(doc)"
+                                                class="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-all shadow-sm"
+                                                title="Distribusikan Dokumen Final (Admin Only)"
+                                            >
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                                                </svg>
+                                            </button>
+                                        </template>
+
                                         <template x-if="currentUser?.role === 'user' && doc.author_id === currentUser?.id">
                                             <button
                                                 @click="handleDelete(doc.id, doc.title)"

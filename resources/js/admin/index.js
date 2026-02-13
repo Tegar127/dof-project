@@ -1,6 +1,7 @@
 window.adminApp = function() {
     return {
-        activeTab: 'users',
+        activeTab: 'dashboard',
+        sidebarOpen: true,
         showForm: false, // Replaces modals
         users: [],
         groups: [],
@@ -15,6 +16,23 @@ window.adminApp = function() {
         viewingDocumentHistoryTitle: '',
         documentVersions: [],
         loadingVersions: false,
+
+        // All Documents State
+        allDocuments: [],
+        searchAllDocs: '',
+
+        // Distribution Management State
+        distributions: [],
+        approvedDocuments: [],
+        searchApproved: '',
+        distViewMode: 'list', // 'list', 'distribute', 'details'
+        selectedDocForDist: null,
+        distributeForm: {
+            recipientType: 'all',
+            recipientId: null,
+            notes: ''
+        },
+        selectedDocDetails: null,
 
         // Delete State
         showDeleteModal: false,
@@ -49,6 +67,163 @@ window.adminApp = function() {
 
             await this.loadUsers();
             await this.loadGroups();
+            await this.loadDistributions();
+            await this.loadAllDocuments();
+            await this.loadApprovedDocuments();
+        },
+
+        async loadAllDocuments() {
+            try {
+                const response = await fetch('/api/documents', {
+                    headers: { 
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json' 
+                    }
+                });
+                if (response.ok) {
+                    this.allDocuments = await response.json();
+                }
+            } catch (error) {
+                console.error('Error loading all documents:', error);
+            }
+        },
+
+        get filteredAllDocs() {
+            // Only include Approved and Final (Sent/Received) statuses
+            const archiveDocs = this.allDocuments.filter(d => {
+                const status = typeof d.status === 'object' ? d.status.value : d.status;
+                return ['approved', 'sent', 'received'].includes(status);
+            });
+
+            if (!this.searchAllDocs) return archiveDocs;
+            const s = this.searchAllDocs.toLowerCase();
+            return archiveDocs.filter(d => 
+                d.title.toLowerCase().includes(s) || 
+                (d.content_data?.docNumber || '').toLowerCase().includes(s) ||
+                d.author_name.toLowerCase().includes(s)
+            );
+        },
+
+        async loadDistributions() {
+            try {
+                const response = await fetch('/api/distributions', {
+                    headers: { 
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json' 
+                    }
+                });
+                if (response.ok) {
+                    this.distributions = await response.json();
+                }
+            } catch (error) {
+                this.showNotification('Error loading distributions', 'error');
+            }
+        },
+
+        get finalizedDistributions() {
+            return this.distributions.filter(d => ['sent', 'received'].includes(d.status));
+        },
+
+        async loadApprovedDocuments() {
+            try {
+                const response = await fetch('/api/documents', {
+                    headers: { 
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json' 
+                    }
+                });
+                if (response.ok) {
+                    const allDocs = await response.json();
+                    // Filter for only APPROVED status
+                    this.approvedDocuments = allDocs.filter(d => 
+                        (typeof d.status === 'object' ? d.status.value === 'approved' : d.status === 'approved')
+                    );
+                }
+            } catch (error) {
+                console.error('Error loading approved documents:', error);
+            }
+        },
+
+        get filteredApprovedDocs() {
+            if (!this.searchApproved) return this.approvedDocuments;
+            const s = this.searchApproved.toLowerCase();
+            return this.approvedDocuments.filter(d => 
+                d.title.toLowerCase().includes(s) || 
+                (d.content_data?.docNumber || '').toLowerCase().includes(s)
+            );
+        },
+
+        openDistributeModal(doc) {
+            this.selectedDocForDist = doc;
+            this.distributeForm = {
+                recipientType: 'all',
+                recipientId: null,
+                notes: ''
+            };
+            this.distViewMode = 'distribute';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+
+        async confirmDistribute() {
+            if (!this.selectedDocForDist) return;
+            if (this.distributeForm.recipientType !== 'all' && !this.distributeForm.recipientId) {
+                this.showNotification('Pilih penerima terlebih dahulu', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/documents/${this.selectedDocForDist.id}/distribute`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + this.token,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        recipients: [{
+                            type: this.distributeForm.recipientType,
+                            id: this.distributeForm.recipientId
+                        }],
+                        notes: this.distributeForm.notes
+                    })
+                });
+
+                if (response.ok) {
+                    this.showNotification('Dokumen berhasil didistribusikan');
+                    this.distViewMode = 'list';
+                    await this.loadDistributions();
+                    await this.loadApprovedDocuments();
+                } else {
+                    const data = await response.json();
+                    this.showNotification(data.message || 'Error distributing document', 'error');
+                }
+            } catch (error) {
+                this.showNotification('Error distributing document', 'error');
+            }
+        },
+
+        async openDistributionDetails(docId) {
+            try {
+                const response = await fetch(`/api/distributions/${docId}`, {
+                    headers: { 
+                        'Authorization': 'Bearer ' + this.token,
+                        'Accept': 'application/json' 
+                    }
+                });
+                if (response.ok) {
+                    this.selectedDocDetails = await response.json();
+                    this.distViewMode = 'details';
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            } catch (error) {
+                this.showNotification('Error loading distribution details', 'error');
+            }
+        },
+
+        closeDistView() {
+            this.distViewMode = 'list';
+            this.selectedDocForDist = null;
+            this.selectedDocDetails = null;
         },
 
         showNotification(message, type = 'success') {
