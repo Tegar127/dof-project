@@ -11,7 +11,7 @@
         <!-- Tab Navigation -->
         <div class="flex p-4 bg-gray-50 border-b gap-2">
             <button id="tabNota" class="flex-1 py-2 px-3 rounded font-bold border transition tab-active text-xs">Nota Dinas</button>
-            <button id="tabSppd" class="flex-1 py-2 px-3 rounded font-bold border transition tab-inactive text-xs">Surat Perintah</button>
+            <button id="tabSppd" class="flex-1 py-2 px-3 rounded font-bold border transition tab-inactive text-xs">SURAT PERINTAH PERJALANAN DINAS</button>
             <button id="tabPerj" class="flex-1 py-2 px-3 rounded font-bold border transition tab-inactive text-xs">Perjanjian</button>
         </div>
 
@@ -217,11 +217,6 @@
                 </div>
 
                 <div style="clear: both;"></div>
-                <table class="paraf-box">
-                    <tr><td colspan="2" class="text-center font-bold bg-gray-100">BD-MLI</td></tr>
-                    <tr><td rowspan="2" class="text-center align-middle" width="50%">Paraf</td><td class="text-center">Staff</td></tr>
-                    <tr><td class="text-center" height="30"> </td></tr>
-                </table>
             </div>
 
             <!-- Preview SPPD -->
