@@ -135,6 +135,24 @@
 <body onload="window.print()">
     <div class="container clearfix">
         
+        @php
+            $numberingHelper = function($i, $s) {
+                $s = $s ?: '1.';
+                if ($s === 'a.') return chr(97 + $i) . '.';
+                if ($s === 'A.') return chr(65 + $i) . '.';
+                if ($s === 'a)') return chr(97 + $i) . ')';
+                if ($s === 'A)') return chr(65 + $i) . ')';
+                if ($s === '1.') return ($i + 1) . '.';
+                if ($s === 'I.') {
+                    $roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+                    return ($roman[$i] ?? ($i + 1)) . '.';
+                }
+                if ($s === '-') return '-';
+                if ($s === '*') return '•';
+                return ($i + 1) . '.';
+            };
+        @endphp
+
         <!-- Logo -->
         <div style="margin-bottom: 10px;">
              <img src="{{ asset('images/logo_asa.png') }}" alt="Logo" style="height: 60px;">
@@ -148,7 +166,20 @@
             </div>
 
             <table class="info-table">
-                <tr><td width="100">Kepada</td><td width="20">:</td><td>Yth. {{ $document->content_data['to'] ?? '...' }}</td></tr>
+                <tr><td width="100" style="vertical-align: top;">Kepada</td><td width="20" style="vertical-align: top;">:</td><td>
+                    @if(is_array($document->content_data['to'] ?? null))
+                        @foreach($document->content_data['to'] as $index => $to)
+                            <div style="display: flex;">
+                                @if(count($document->content_data['to']) > 1)
+                                    <div style="width: 20px; flex-shrink: 0;">{{ $index + 1 }}.</div>
+                                @endif
+                                <div>Yth. {{ $to ?: '...' }}</div>
+                            </div>
+                        @endforeach
+                    @else
+                        Yth. {{ $document->content_data['to'] ?? '...' }}
+                    @endif
+                </td></tr>
                 <tr><td>Dari</td><td>:</td><td>{{ $document->content_data['from'] ?? '...' }}</td></tr>
                 <tr><td>Lampiran</td><td>:</td><td>{{ $document->content_data['attachment'] ?? '...' }}</td></tr>
                 <tr><td>Hal</td><td>:</td><td class="font-bold">{{ $document->content_data['subject'] ?? '...' }}</td></tr>
@@ -158,10 +189,24 @@
                 <p style="margin-bottom: 5px;">Berdasarkan:</p>
                 <div class="text-justify">
                     @forelse($document->content_data['basis'] ?? [] as $index => $item)
-                        @if(!empty($item))
+                        @if(!empty($item['text']))
                             <div style="display: flex; margin-bottom: 4px;">
                                 <div style="width: 25px; flex-shrink: 0; font-weight: bold;">{{ $numberingHelper($index, $document->content_data['basisStyle'] ?? '1.') }}</div>
-                                <div style="flex-grow: 1;">{{ $item }}</div>
+                                <div style="flex-grow: 1;">
+                                    {{ $item['text'] }}
+                                    @if(!empty($item['sub']))
+                                        <div style="margin-top: 2px;">
+                                            @foreach($item['sub'] as $subIndex => $subText)
+                                                @if(!empty($subText))
+                                                    <div style="display: flex; margin-bottom: 2px;">
+                                                        <div style="width: 20px; flex-shrink: 0;">{{ chr(97 + $subIndex) }}.</div>
+                                                        <div>{{ $subText }}</div>
+                                                    </div>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
                         @endif
                     @empty
@@ -170,7 +215,7 @@
                 </div>
             </div>
 
-            <div class="text-justify" style="margin-bottom: 20px; white-space: pre-wrap;">{{ $document->content_data['content'] ?? '...' }}</div>
+            <div class="text-justify" style="margin-bottom: 20px;">{!! $document->content_data['content'] ?? '...' !!}</div>
 
             <p style="margin-bottom: 30px;">Demikian disampaikan dan untuk dijadikan periksa.</p>
 
@@ -189,11 +234,49 @@
             </div>
 
             <div style="clear: both;"></div>
-            <table class="paraf-box">
-                <tr><td colspan="2" class="text-center font-bold bg-gray">BD-MLI</td></tr>
-                <tr><td rowspan="2" class="text-center" width="50%" style="vertical-align: middle;">Paraf</td><td class="text-center">Staff</td></tr>
-                <tr><td class="text-center" height="30"> </td></tr>
-            </table>
+            
+            <div style="margin-top: 20px;">
+                @if(!empty($document->content_data['paraf']) && count($document->content_data['paraf']) > 0)
+                    <div class="paraf-container" style="margin-bottom: 20px;">
+                        <table class="paraf-table" style="margin-left: 0; width: auto; min-width: 300px;">
+                            <tr>
+                                <td rowspan="3" class="col-paraf-label">Paraf</td>
+                                @foreach(array_reverse($document->content_data['paraf'] ?? []) as $paraf)
+                                    <td class="cell-width">{{ $paraf['code'] ?? '...' }}</td>
+                                @endforeach
+                            </tr>
+                            <tr class="row-name">
+                                @foreach(array_reverse($document->content_data['paraf'] ?? []) as $paraf)
+                                    <td>{{ $paraf['name'] ?? '...' }}</td>
+                                @endforeach
+                            </tr>
+                            <tr class="row-signature">
+                                @foreach(array_reverse($document->content_data['paraf'] ?? []) as $paraf)
+                                    <td style="text-align: center; vertical-align: middle; height: 65px;">
+                                        @if(!empty($paraf['signature']))
+                                            <img src="{{ $paraf['signature'] }}" style="max-height: 60px; display: block; margin: 0 auto;">
+                                        @endif
+                                    </td>
+                                @endforeach
+                            </tr>
+                        </table>
+                    </div>
+                @endif
+            </div>
+
+            <div style="margin-top: 30px; font-size: 10pt;">
+                @if(!empty($document->content_data['ccs']) && count(array_filter($document->content_data['ccs'])) > 0)
+                    <p class="font-bold underline" style="margin-bottom: 5px;">Tembusan:</p>
+                    <div style="margin-left: 20px;">
+                        @foreach(array_filter($document->content_data['ccs']) as $index => $item)
+                            <div style="display: flex; margin-bottom: 4px;">
+                                <div style="width: 25px; flex-shrink: 0; font-weight: bold;">{{ $index + 1 }}.</div>
+                                <div style="flex-grow: 1;">{{ $item }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
 
         @elseif($document->type === 'sppd')
             <!-- SPPD -->
@@ -217,10 +300,24 @@
                     <td>
                         <div class="text-justify">
                             @forelse($document->content_data['remembers'] ?? [] as $index => $item)
-                                @if(!empty($item))
+                                @if(!empty($item['text']))
                                     <div style="display: flex; margin-bottom: 4px;">
                                         <div style="width: 25px; flex-shrink: 0; font-weight: bold;">{{ $numberingHelper($index, $document->content_data['remembersStyle'] ?? '1.') }}</div>
-                                        <div style="flex-grow: 1;">{{ $item }}</div>
+                                        <div style="flex-grow: 1;">
+                                            {{ $item['text'] }}
+                                            @if(!empty($item['sub']))
+                                                <div style="margin-top: 2px;">
+                                                    @foreach($item['sub'] as $subIndex => $subText)
+                                                        @if(!empty($subText))
+                                                            <div style="display: flex; margin-bottom: 2px;">
+                                                                <div style="width: 20px; flex-shrink: 0;">{{ chr(97 + $subIndex) }}.</div>
+                                                                <div>{{ $subText }}</div>
+                                                            </div>
+                                                        @endif
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        </div>
                                     </div>
                                 @endif
                             @empty
@@ -237,7 +334,13 @@
                 <tr>
                     <td class="sppd-label">Kepada</td>
                     <td class="sppd-colon"></td>
-                    <td class="font-bold">{{ $document->content_data['to'] ?? '...' }}</td>
+                    <td class="font-bold">
+                        @if(is_array($document->content_data['to'] ?? null))
+                            {{ implode(', ', array_filter($document->content_data['to'])) ?: '...' }}
+                        @else
+                            {{ $document->content_data['to'] ?? '...' }}
+                        @endif
+                    </td>
                 </tr>
             </table>
 
@@ -247,7 +350,7 @@
                     <td class="sppd-colon">:</td>
                     <td>
                         <ol class="list-numbered" style="margin: 0; padding-left: 20px;">
-                            <li style="margin-bottom: 10px;">{{ $document->content_data['task'] ?? '...' }}</li>
+                            <li style="margin-bottom: 10px;">{!! $document->content_data['task'] ?? '...' !!}</li>
                             
                             <li style="margin-bottom: 10px;">
                                 Perjalanan dinas dilaksanakan, sebagai berikut:
@@ -259,9 +362,9 @@
                                 </table>
                             </li>
 
-                            <li class="text-justify" style="margin-bottom: 10px;">{{ $document->content_data['funding'] ?? '...' }}</li>
-                            <li class="text-justify" style="margin-bottom: 10px;">{{ $document->content_data['report'] ?? '...' }}</li>
-                            <li class="text-justify" style="margin-bottom: 10px;">{{ $document->content_data['closing'] ?? '...' }}</li>
+                            <li class="text-justify" style="margin-bottom: 10px;">{!! $document->content_data['funding'] ?? '...' !!}</li>
+                            <li class="text-justify" style="margin-bottom: 10px;">{!! $document->content_data['report'] ?? '...' !!}</li>
+                            <li class="text-justify" style="margin-bottom: 10px;">{!! $document->content_data['closing'] ?? '...' !!}</li>
                         </ol>
                     </td>
                 </tr>
@@ -283,6 +386,35 @@
             </div>
 
             <div style="clear: both;"></div>
+
+            <div style="margin-top: 20px;">
+                @if(!empty($document->content_data['paraf']) && count($document->content_data['paraf']) > 0)
+                    <div class="paraf-container" style="margin-bottom: 20px;">
+                        <table class="paraf-table" style="margin-left: 0; width: auto; min-width: 300px;">
+                            <tr>
+                                <td rowspan="3" class="col-paraf-label">Paraf</td>
+                                @foreach(array_reverse($document->content_data['paraf'] ?? []) as $paraf)
+                                    <td class="cell-width">{{ $paraf['code'] ?? '...' }}</td>
+                                @endforeach
+                            </tr>
+                            <tr class="row-name">
+                                @foreach(array_reverse($document->content_data['paraf'] ?? []) as $paraf)
+                                    <td>{{ $paraf['name'] ?? '...' }}</td>
+                                @endforeach
+                            </tr>
+                            <tr class="row-signature">
+                                @foreach(array_reverse($document->content_data['paraf'] ?? []) as $paraf)
+                                    <td style="text-align: center; vertical-align: middle; height: 65px;">
+                                        @if(!empty($paraf['signature']))
+                                            <img src="{{ $paraf['signature'] }}" style="max-height: 60px; display: block; margin: 0 auto;">
+                                        @endif
+                                    </td>
+                                @endforeach
+                            </tr>
+                        </table>
+                    </div>
+                @endif
+            </div>
             
             <div style="margin-top: 30px; font-size: 10pt;">
                 <p class="font-bold underline" style="margin-bottom: 5px;">Tembusan:</p>
@@ -343,24 +475,6 @@
                 </div>
 
                 <p style="margin-bottom: 15px;">Pihak Kesatu dan Pihak Kedua selanjutnya secara bersama-sama disebut sebagai <span class="font-bold">"Para Pihak"</span> dan masing-masing disebut <span class="font-bold">"Pihak"</span>, serta dalam kedudukannya sebagaimana tersebut di atas, terlebih dulu menerangkan hal-hal sebagai berikut:</p>
-
-                @php
-                    $numberingHelper = function($i, $s) {
-                        $s = $s ?: 'A.';
-                        if ($s === 'a.') return chr(97 + $i) . '.';
-                        if ($s === 'A.') return chr(65 + $i) . '.';
-                        if ($s === 'a)') return chr(97 + $i) . ')';
-                        if ($s === 'A)') return chr(65 + $i) . ')';
-                        if ($s === '1.') return ($i + 1) . '.';
-                        if ($s === 'I.') {
-                            $roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
-                            return ($roman[$i] ?? ($i + 1)) . '.';
-                        }
-                        if ($s === '-') return '-';
-                        if ($s === '*') return '•';
-                        return chr(65 + $i) . '.';
-                    };
-                @endphp
 
                 @foreach($document->content_data['points'] ?? [] as $index => $point)
                     @if(!empty($point))

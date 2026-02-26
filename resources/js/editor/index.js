@@ -8,26 +8,26 @@ window.editorApp = function () {
             // Admin always editable
             if (this.currentUser.role === 'admin') return true;
 
-            // Final check: if approved, sent, or received, NO ONE else can edit
             const status = typeof this.document.status === 'object' ? this.document.status.value : this.document.status;
-            const isFinal = ['approved', 'sent', 'received'].includes(status);
-            if (isFinal) return false;
 
-            // Reviewer logic
-            if (this.currentUser.role === 'reviewer') {
-                return true; // Reviewers can edit for review purposes if not final
+            // Approved is always read-only
+            if (status === 'approved') return false;
+
+            // If current user is the author (Sender)
+            if (this.document.author_id && this.document.author_id == this.currentUser.id) {
+                // Authors can only edit drafts or revisions
+                return status === 'draft' || status === 'needs_revision';
             }
 
-            // User (Staff) logic
-            if (this.currentUser.role === 'user') {
-                // If current user is the author (Sender)
-                if (this.document.author_id && this.document.author_id == this.currentUser.id) {
-                    // Authors can only edit drafts or revisions
-                    return status === 'draft' || status === 'needs_revision';
-                }
-                
-                // If not author (Receiver)
-                return true;
+            // Recipient/Reviewer logic (The "Current Holder")
+            // A user is a recipient if their group matches the target_value
+            const userGroups = [this.currentUser.group_name, ...(this.currentUser.groups || []).map(g => typeof g === 'object' ? g.name : g)];
+            const isTargetGroup = this.document.target_role === 'group' && userGroups.includes(this.document.target_value);
+            const isTargetDispo = this.document.target_role === 'dispo' && this.currentUser.role === 'reviewer';
+
+            if (isTargetGroup || isTargetDispo) {
+                // Recipients/Reviewers can edit documents sent to them for action
+                return ['sent', 'received', 'pending_review'].includes(status);
             }
 
             return false;
@@ -88,7 +88,6 @@ window.editorApp = function () {
                             date: new Date().toISOString().split('T')[0],
                             division: '',
                             signerPosition: '', signerName: '', signature: '',
-                            bdMliSignature: '', // New field for BD-MLI
                             closing: 'Demikian disampaikan dan untuk dijadikan periksa.', // Requirement 4
                             // SPPD
                             weigh: '',
@@ -533,8 +532,14 @@ window.editorApp = function () {
 
         addListItem(key) {
             if (!this.document.content_data[key]) this.document.content_data[key] = [];
-            // Push object instead of string to support sub-items
-            this.document.content_data[key].push({ text: '', sub: [] });
+            
+            // Requirement: basis and remembers use object structure for sub-items
+            if (['basis', 'remembers'].includes(key)) {
+                this.document.content_data[key].push({ text: '', sub: [] });
+            } else {
+                // to, ccs, etc. use simple strings
+                this.document.content_data[key].push('');
+            }
         },
 
         addSubItem(key, index) {
@@ -661,8 +666,12 @@ window.editorApp = function () {
                     await this.loadLogs();
                     
                     return true;
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    this.alertMessage = 'Gagal menyimpan: ' + (errorData.message || response.statusText);
+                    this.showSuccessModal = true;
+                    return false;
                 }
-                return false;
             } catch (error) {
                 this.alertMessage = 'Gagal menyimpan dokumen.';
                 this.showSuccessModal = true;

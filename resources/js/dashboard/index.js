@@ -366,28 +366,21 @@ window.dashboardApp = function () {
                 pending_review: 'bg-amber-100 text-amber-700',
                 needs_revision: 'bg-red-100 text-red-700',
                 approved: 'bg-emerald-100 text-emerald-700',
-                sent: 'bg-sky-100 text-sky-700',
-                received: 'bg-violet-100 text-violet-700'
+                sent: 'bg-indigo-100 text-indigo-700',
+                received: 'bg-emerald-100 text-emerald-700'
             };
             return classes[status] || classes.draft;
         },
 
         getStatusLabel(doc) {
             const status = typeof doc.status === 'object' ? doc.status.value : doc.status;
-            const isAuthor = doc.author_id === this.currentUser?.id;
-
-            if (status === 'sent') {
-                return isAuthor ? 'Dikirim' : 'Belum Dibaca';
-            }
-            if (status === 'received') {
-                return isAuthor ? 'Dibaca' : 'Sudah Dibaca';
-            }
-
             const labels = {
                 draft: 'Draft',
                 pending_review: 'Review',
                 needs_revision: 'Revisi',
-                approved: 'Approved'
+                approved: 'Approved',
+                sent: 'Dikirim',
+                received: 'Diterima'
             };
             return labels[status] || 'Draft';
         },
