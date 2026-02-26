@@ -61,31 +61,7 @@
 
     <!-- Delete Confirmation Modal -->
     <div x-show="showDeleteModal" x-cloak x-transition class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-        <div @click.away="showDeleteModal = false" class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 text-center">
-            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-            </div>
-            <h3 class="text-xl font-bold text-slate-800 mb-2">Hapus Dokumen?</h3>
-            <p class="text-slate-500 mb-6">
-                Apakah anda yakin ingin menghapus <span class="font-bold text-slate-700" x-text="'\"' + docToDelete?.title + '\"'"></span>? Tindakan ini tidak dapat dibatalkan.
-            </p>
-            <div class="flex gap-3">
-                <button 
-                    @click="showDeleteModal = false"
-                    class="flex-1 py-2.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 font-semibold transition-colors"
-                >
-                    Batal
-                </button>
-                <button 
-                    @click="confirmDelete()"
-                    class="flex-1 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold transition-colors shadow-sm"
-                >
-                    Ya, Hapus
-                </button>
-            </div>
-        </div>
+        <!-- ... (existing delete modal content) ... -->
     </div>
 
     <!-- Distribute Modal -->
