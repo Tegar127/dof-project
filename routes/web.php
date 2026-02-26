@@ -28,3 +28,9 @@ Route::get('/documents/{id}', function ($id) {
 })->name('documents.view');
 
 Route::get('/documents/{document}/print', [App\Http\Controllers\DocumentController::class, 'print'])->name('documents.print');
+
+// Hapus route ini setelah berhasil migrasi di production
+Route::get('/migrate-db', function () {
+    \Illuminate\Support\Facades\Artisan::call('migrate --force');
+    return "Database migrated successfully!";
+});
