@@ -59,7 +59,7 @@ class Document extends Model
     }
 
     /**
-     * Scope to get documents by role.
+     * Scope to get documents by role and group.
      */
     public function scopeForUser($query, $user)
     {
@@ -67,24 +67,32 @@ class Document extends Model
             return $query; // Admin can see everything
         }
 
-        if ($user->role === 'reviewer') {
-            return $query->where('target_role', 'dispo')
-                         ->whereIn('status', [DocumentStatus::PENDING_REVIEW, DocumentStatus::APPROVED]);
-        }
-
         // Get all groups the user belongs to (Primary + Extra)
         $groupNames = $user->groups()->pluck('name')->push($user->group_name)->filter()->unique()->toArray();
         $groupIds = $user->groups()->pluck('groups.id')->toArray();
 
+        if ($user->role === 'reviewer') {
+            return $query->where(function($q) use ($groupNames, $user) {
+                $q->where('target_role', 'dispo')
+                  ->whereIn('status', [DocumentStatus::PENDING_REVIEW, DocumentStatus::APPROVED])
+                  ->orWhereIn('author_name', $groupNames) // If someone in their group authored it
+                  ->orWhere('author_id', $user->id);
+            });
+        }
+
         return $query->where(function ($q) use ($user, $groupNames, $groupIds) {
             $q->where('author_id', $user->id)
+              ->orWhereHas('author', function ($aq) use ($groupNames) {
+                  $aq->whereIn('group_name', $groupNames);
+              }) // Role/Group-based ownership
               ->orWhere(function ($sq) use ($groupNames) {
                   $sq->where('target_role', 'group')
                      ->whereIn('target_value', $groupNames)
-                     ->whereIn('status', [DocumentStatus::SENT, DocumentStatus::RECEIVED]);
+                     ->whereIn('status', [DocumentStatus::SENT, DocumentStatus::RECEIVED, DocumentStatus::APPROVED]);
               })
-              ->orWhereHas('logs', function ($lq) use ($user) {
-                  $lq->where('user_id', $user->id);
+              ->orWhereHas('logs', function ($lq) use ($user, $groupNames) {
+                  $lq->where('user_id', $user->id)
+                     ->orWhereIn('metadata->group', $groupNames);
               })
               ->orWhereHas('distributions', function ($dq) use ($user, $groupIds) {
                   $dq->where('recipient_type', 'all')
@@ -97,6 +105,28 @@ class Document extends Model
                            ->where('recipient_id', $user->id);
                     });
               });
+        });
+    }
+
+    /**
+     * Scope to filter documents based on search criteria.
+     */
+    public function scopeSearch($query, $filters)
+    {
+        return $query->when($filters['search'] ?? null, function ($q, $search) {
+            $q->where(function ($sq) use ($search) {
+                $sq->where('title', 'like', "%{$search}%")
+                  ->orWhere('author_name', 'like', "%{$search}%")
+                  ->orWhere('target_value', 'like', "%{$search}%")
+                  ->orWhere('content_data->docNumber', 'like', "%{$search}%")
+                  ->orWhere('content_data->subject', 'like', "%{$search}%")
+                  ->orWhere('content_data->to', 'like', "%{$search}%")
+                  ->orWhere('content_data->from', 'like', "%{$search}%");
+            });
+        })->when($filters['type'] ?? null, function ($q, $type) {
+            $q->where('type', $type);
+        })->when($filters['status'] ?? null, function ($q, $status) {
+            $q->where('status', $status);
         });
     }
 

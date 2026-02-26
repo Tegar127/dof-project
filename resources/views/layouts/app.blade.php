@@ -17,5 +17,6 @@
 </head>
 <body class="font-sans antialiased" style="background-color: #f3f4f6;">
     @yield('content')
+    @stack('scripts')
 </body>
 </html>

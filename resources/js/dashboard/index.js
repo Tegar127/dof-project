@@ -68,10 +68,10 @@ window.dashboardApp = function () {
             await this.autoOrganize();
 
             // Watch filters
-            this.$watch('searchTerm', () => this.filterDocuments());
+            this.$watch('searchTerm', () => this.loadDocuments());
             this.$watch('selectedFolder', () => this.filterDocuments());
             this.$watch('deadlineFilter', () => this.filterDocuments());
-            this.$watch('typeFilter', () => this.filterDocuments());
+            this.$watch('typeFilter', () => this.loadDocuments());
             this.$watch('dateFrom', () => this.filterDocuments());
             this.$watch('dateTo', () => this.filterDocuments());
 
@@ -164,7 +164,13 @@ window.dashboardApp = function () {
 
         async loadDocuments() {
             try {
-                const response = await fetch('/api/documents', {
+                const params = new URLSearchParams({
+                    search: this.searchTerm,
+                    type: this.typeFilter !== 'all' ? this.typeFilter : '',
+                    // Additional filters can be added here
+                });
+
+                const response = await fetch(`/api/documents?${params.toString()}`, {
                     headers: {
                         'Authorization': 'Bearer ' + this.token,
                         'Accept': 'application/json'
@@ -173,7 +179,7 @@ window.dashboardApp = function () {
 
                 if (response.ok) {
                     this.documents = await response.json();
-                    this.filterDocuments();
+                    this.filterDocuments(); // Still do some local filtering if needed
                 }
             } catch (error) {
                 console.error('Error loading documents:', error);
@@ -183,26 +189,13 @@ window.dashboardApp = function () {
         filterDocuments() {
             let docs = this.documents;
 
-            // Filter by search term
-            if (this.searchTerm) {
-                const search = this.searchTerm.toLowerCase();
-                docs = docs.filter(d =>
-                    d.title.toLowerCase().includes(search) ||
-                    (d.content_data?.docNumber || d.data?.docNumber || '').toLowerCase().includes(search)
-                );
-            }
-
+            // Since backend now handles search and type, we primarily filter by other local UI states
             // Filter by folder
             if (this.selectedFolder) {
                 docs = docs.filter(d => d.folder_id == this.selectedFolder);
             }
 
-            // Filter by type
-            if (this.typeFilter !== 'all') {
-                docs = docs.filter(d => d.type === this.typeFilter);
-            }
-
-            // Filter by date range
+            // Filter by date range (local for now)
             if (this.dateFrom) {
                 const from = new Date(this.dateFrom);
                 from.setHours(0, 0, 0, 0);

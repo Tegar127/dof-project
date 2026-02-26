@@ -17,9 +17,15 @@
         color: black;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         margin: auto;
-        overflow: hidden; 
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+        word-break: normal;
         height: auto; 
         position: relative;
+    }
+
+    .paper div, .paper p, .paper span {
+        max-width: 100%;
     }
 
     @media screen {

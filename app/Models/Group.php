@@ -6,11 +6,23 @@ use Illuminate\Database\Eloquent\Model;
 
 class Group extends Model
 {
-    protected $fillable = ['name', 'is_private'];
+    protected $fillable = ['name', 'is_private', 'category', 'parent_id'];
 
     /**
-     * Get the users in this group.
+     * Get the parent group.
      */
+    public function parent()
+    {
+        return $this->belongsTo(Group::class, 'parent_id');
+    }
+
+    /**
+     * Get the child groups.
+     */
+    public function children()
+    {
+        return $this->hasMany(Group::class, 'parent_id');
+    }
     public function users()
     {
         return $this->hasMany(User::class, 'group_name', 'name');

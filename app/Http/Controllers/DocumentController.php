@@ -25,8 +25,9 @@ class DocumentController extends Controller
     {
         $user = Auth::user();
         
-        // Get documents filtered by user role using the scope
+        // Get documents filtered by user role and search criteria
         $documents = Document::forUser($user)
+            ->search($request->all())
             ->with('author')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -56,13 +57,22 @@ class DocumentController extends Controller
 
         $user = Auth::user();
 
+        $contentData = $validated['content_data'] ?? [];
+        
+        // Ensure defaults for new requirements
+        if (!isset($contentData['to'])) $contentData['to'] = [''];
+        if (!isset($contentData['from'])) $contentData['from'] = $user->name;
+        if (!isset($contentData['signerName'])) $contentData['signerName'] = $user->name;
+        if (!isset($contentData['signerPosition'])) $contentData['signerPosition'] = strtoupper($user->position ?? '');
+        if (!isset($contentData['paraf'])) $contentData['paraf'] = [['code' => '', 'name' => '', 'signature' => '']];
+
         $document = Document::create([
             'title' => $validated['title'],
             'type' => $validated['type'],
             'status' => $validated['status'] ?? DocumentStatus::DRAFT,
             'author_id' => $user->id,
             'author_name' => $user->name,
-            'content_data' => $validated['content_data'] ?? [],
+            'content_data' => $contentData,
             'history_log' => $validated['history_log'] ?? [],
             'target_role' => $validated['target']['type'] ?? null,
             'target_value' => $validated['target']['value'] ?? null,
@@ -266,13 +276,15 @@ class DocumentController extends Controller
 
                     if (!isset($oldContent[$key])) {
                         if (!empty($value)) {
-                            $val = is_string($value) ? (strlen($value) > 15 ? substr($value, 0, 15).'...' : $value) : '(data)';
+                            $val = is_array($value) ? implode(', ', $value) : (is_string($value) ? (strlen($value) > 15 ? substr($value, 0, 15).'...' : $value) : '(data)');
                             $diffs[] = "Isi $label: '$val'";
                         }
                     } elseif ($oldContent[$key] !== $value) {
                         // For arrays (lists), just generic update message
                         if (is_array($value)) {
-                            $diffs[] = "Update list $label";
+                            $oldVal = is_array($oldContent[$key]) ? implode(', ', $oldContent[$key]) : '';
+                            $newVal = implode(', ', $value);
+                            $diffs[] = "Ubah list $label: '$oldVal' ➝ '$newVal'";
                         } else {
                             // String comparison
                             $oldVal = is_string($oldContent[$key]) ? $oldContent[$key] : '';

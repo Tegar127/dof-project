@@ -63,6 +63,9 @@ window.editorApp = function () {
         showHistoryModal: false, // Unified History Modal
         activeHistoryTab: 'status', // status, versions, work
         sessionStartTime: null,
+        ckEditorInstance: null,
+        ckEditorInitializing: false,
+        sidebarOpen: true,
         document: {
             title: '',
             type: 'nota', // Default
@@ -72,26 +75,31 @@ window.editorApp = function () {
             feedback: '',
             deadline: null,
             approvals: [],
-            content_data: {
-                // Shared
-                docNumber: '',
-                location: '',
-                // Nota
-                to: '', from: '', attachment: '', subject: '',
-                basis: [''],
-                content: '',
-                date: '',
-                division: '',
-                signerPosition: '', signerName: '', signature: '',
-                bdMliSignature: '', // New field for BD-MLI
-                // SPPD
-                weigh: '',
-                remembers: [''],
-                task: '', destination: '', transport: '',
-                dateGo: '', dateBack: '',
+                            content_data: {
+                            // Shared
+                            docNumber: '',
+                            location: 'Jakarta',
+                            plh_pjs: '', // Requirement 7
+                            // Nota
+                            to: [''], // Requirement 5: Multiple recipients
+                            from: '', attachment: '', subject: '',
+                            basis: [{ text: '', sub: [] }],
+                            content: '',
+                            date: new Date().toISOString().split('T')[0],
+                            division: '',
+                            signerPosition: '', signerName: '', signature: '',
+                            bdMliSignature: '', // New field for BD-MLI
+                            closing: 'Demikian disampaikan dan untuk dijadikan periksa.', // Requirement 4
+                            // SPPD
+                            weigh: '',
+                            remembers: [{ text: '', sub: [] }],
+                            task: '', destination: '', transport: '',                dateGo: '', dateBack: '',
                 funding: '', report: '', closing: '',
-                signDate: '',
-                ccs: ['']
+                signDate: new Date().toISOString().split('T')[0],
+                ccs: [''],
+                paraf: [ // Requirement 1: Paraf for all
+                    { code: '', name: '', signature: '' }
+                ]
             }
         },
 
@@ -115,13 +123,32 @@ window.editorApp = function () {
                 await this.loadDocument();
                 this.loadLogs(); // No await to parallelize
             } else {
-                window.location.href = '/dashboard';
+                // Requirement 6: Auto-fill From and Signatory for NEW documents
+                this.document.content_data.from = this.currentUser.name;
+                this.document.content_data.signerName = this.currentUser.name;
+                this.document.content_data.signerPosition = (this.currentUser.position || '').toUpperCase();
+                this.document.content_data.division = (this.currentUser.group_name || '').toUpperCase();
+                this.document.content_data.location = 'Jakarta';
+                this.document.content_data.date = new Date().toISOString().split('T')[0];
+                this.document.content_data.signDate = new Date().toISOString().split('T')[0];
             }
+
+            // Initialize CKEditor
+            this.$nextTick(() => {
+                this.initCKEditor();
+            });
 
             // Start Time Tracking if editable
             if (this.isEditable()) {
                 this.sessionStartTime = new Date();
             }
+
+            // Sync CKEditor when content changes externally (e.g. from version restore)
+            this.$watch('document.content_data.content', (val) => {
+                if (this.ckEditorInstance && this.ckEditorInstance.getData() !== val) {
+                    this.ckEditorInstance.setData(val || '');
+                }
+            });
             
             // Handle tab close/navigation
             window.addEventListener('beforeunload', () => {
@@ -129,6 +156,45 @@ window.editorApp = function () {
                     this.sendWorkLog(true);
                 }
             });
+        },
+
+        initCKEditor() {
+            const editorEl = document.querySelector('#ck-editor');
+            if (!editorEl || this.ckEditorInstance || this.ckEditorInitializing) return;
+
+            this.ckEditorInitializing = true;
+
+            const checkCKEditor = setInterval(() => {
+                if (typeof ClassicEditor !== 'undefined') {
+                    clearInterval(checkCKEditor);
+                    
+                    ClassicEditor
+                        .create(editorEl, {
+                            toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', 'undo', 'redo'],
+                        })
+                        .then(editor => {
+                            this.ckEditorInstance = editor;
+                            this.ckEditorInitializing = false;
+
+                            // Set initial data from document model
+                            editor.setData(this.document.content_data.content || '');
+
+                            // Sync changes to model
+                            editor.model.document.on('change:data', () => {
+                                this.document.content_data.content = editor.getData();
+                            });
+
+                            // Read-only mode
+                            if (!this.isEditable()) {
+                                editor.enableReadOnlyMode('isLocked');
+                            }
+                        })
+                        .catch(error => {
+                            this.ckEditorInitializing = false;
+                            console.error('CKEditor Init Error:', error);
+                        });
+                }
+            }, 100);
         },
 
         async openHistoryModal() {
@@ -435,8 +501,18 @@ window.editorApp = function () {
                     }
 
                     // Ensure content_data has arrays initialized if they were null
-                    if (!this.document.content_data.basis) this.document.content_data.basis = [''];
-                    if (!this.document.content_data.remembers) this.document.content_data.remembers = [''];
+                    if (!this.document.content_data.basis) this.document.content_data.basis = [{ text: '', sub: [] }];
+                    if (!this.document.content_data.remembers) this.document.content_data.remembers = [{ text: '', sub: [] }];
+                    
+                    // Auto-migrate old string arrays to object arrays
+                    ['basis', 'remembers'].forEach(key => {
+                        if (this.document.content_data[key] && this.document.content_data[key].length > 0) {
+                            if (typeof this.document.content_data[key][0] === 'string') {
+                                this.document.content_data[key] = this.document.content_data[key].map(text => ({ text, sub: [] }));
+                            }
+                        }
+                    });
+
                     if (!this.document.content_data.ccs) this.document.content_data.ccs = [''];
                     if (!this.document.content_data.points) this.document.content_data.points = [''];
                     if (!this.document.content_data.paraf || this.document.content_data.paraf.length === 0) {
@@ -444,13 +520,32 @@ window.editorApp = function () {
                             { code: '', name: '', signature: '' }
                         ];
                     }
+
+                    // Reinforce CKEditor data after load
+                    if (this.ckEditorInstance) {
+                        this.ckEditorInstance.setData(this.document.content_data.content || '');
+                    } else {
+                        this.initCKEditor();
+                    }
                 }
             } catch (e) { console.error(e); }
         },
 
         addListItem(key) {
             if (!this.document.content_data[key]) this.document.content_data[key] = [];
-            this.document.content_data[key].push('');
+            // Push object instead of string to support sub-items
+            this.document.content_data[key].push({ text: '', sub: [] });
+        },
+
+        addSubItem(key, index) {
+            if (!this.document.content_data[key][index].sub) {
+                this.document.content_data[key][index].sub = [];
+            }
+            this.document.content_data[key][index].sub.push('');
+        },
+
+        removeSubItem(key, parentIndex, subIndex) {
+            this.document.content_data[key][parentIndex].sub.splice(subIndex, 1);
         },
 
         removeListItem(key, index) {
