@@ -249,7 +249,7 @@
         <!-- Quick Actions & Stats -->
         <div class="mb-12">
             <div class="flex items-center gap-3 mb-6">
-                <div class="h-8 w-1.5 bg-indigo-500 rounded-full"></div>
+                <div class="h-8 w-1.5 bg-indigo-400 rounded-full shadow-[0_0_10px_rgba(129,140,248,0.5)]"></div>
                 <h2 class="text-white font-bold text-xl tracking-tight">Buat Dokumen Baru</h2>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
@@ -397,46 +397,114 @@
         <!-- Distribution Monitoring Section -->
         <div x-show="distributions.length > 0" class="mb-12">
             <div class="flex items-center gap-3 mb-6">
-                <div class="h-8 w-1.5 bg-emerald-500 rounded-full"></div>
-                <h2 class="text-white font-bold text-xl tracking-tight">Monitoring Distribusi Dokumen Final</h2>
+                <div class="h-8 w-1.5 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.3)]"></div>
+                <h2 class="text-slate-800 font-bold text-xl tracking-tight">Monitoring Distribusi Dokumen Final</h2>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <template x-for="dist in distributions" :key="dist.id">
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4">
-                        <div class="flex justify-between items-start">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center font-bold">
-                                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 class="font-bold text-slate-800 text-sm" x-text="dist.title"></h3>
-                                    <p class="text-xs text-slate-500" x-text="'Didistribusikan: ' + formatDate(dist.distributed_at).d"></p>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-lg font-black text-indigo-600" x-text="dist.percentage + '%'"></div>
-                                <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Terbaca</div>
-                            </div>
-                        </div>
-                        
-                        <div class="space-y-2">
-                            <div class="flex justify-between text-xs font-medium">
-                                <span class="text-slate-500" x-text="dist.read_count + ' dari ' + dist.total_expected + ' user'"></span>
-                                <span class="text-slate-800" x-text="dist.percentage + '%'"></span>
-                            </div>
-                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                                <div class="bg-emerald-500 h-full rounded-full transition-all duration-1000" :style="'width: ' + dist.percentage + '%'"></div>
-                            </div>
-                        </div>
+            
+            <div class="relative group" x-data="{ 
+                canScrollLeft: false, 
+                canScrollRight: false,
+                checkScroll() {
+                    const container = this.$refs.container;
+                    if (!container) return;
+                    this.canScrollLeft = container.scrollLeft > 10;
+                    this.canScrollRight = container.scrollLeft < (container.scrollWidth - container.clientWidth - 10);
+                },
+                scroll(direction) {
+                    const container = this.$refs.container;
+                    if (!container) return;
+                    const scrollAmount = Math.min(container.clientWidth * 0.8, 400);
+                    container.scrollBy({
+                        left: direction === 'left' ? -scrollAmount : scrollAmount,
+                        behavior: 'smooth'
+                    });
+                }
+            }" x-init="setTimeout(() => checkScroll(), 500); $watch('distributions', () => $nextTick(() => checkScroll()))">
+                
+                <!-- Prev Button -->
+                <button 
+                    x-show="canScrollLeft"
+                    @click="scroll('left')" 
+                    class="absolute -left-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur shadow-xl rounded-full p-2.5 text-emerald-600 border border-emerald-100 hover:bg-emerald-50 transition-all focus:outline-none"
+                    x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="opacity-0 scale-90"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-200"
+                    x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-90"
+                >
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                
+                <!-- Next Button -->
+                <button 
+                    x-show="canScrollRight"
+                    @click="scroll('right')" 
+                    class="absolute -right-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur shadow-xl rounded-full p-2.5 text-emerald-600 border border-emerald-100 hover:bg-emerald-50 transition-all focus:outline-none"
+                    x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="opacity-0 scale-90"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-200"
+                    x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-90"
+                >
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
 
-                        <div class="flex justify-between items-center pt-2 border-t border-slate-50">
-                            <span class="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full font-bold uppercase tracking-tight" x-text="dist.status_label"></span>
-                            <a :href="'/documents/' + dist.id" class="text-xs text-indigo-600 font-bold hover:text-indigo-800">Lihat Detail &rarr;</a>
+                <!-- Container -->
+                <div 
+                    x-ref="container"
+                    @scroll.debounce.50ms="checkScroll()"
+                    class="flex overflow-x-auto gap-6 pb-6 no-scrollbar snap-x snap-mandatory scroll-smooth -mx-4 px-4"
+                >
+                    <template x-for="dist in distributions" :key="dist.id">
+                        <div class="min-w-[85vw] md:min-w-[400px] snap-start">
+                            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4 h-full hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center font-bold">
+                                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-bold text-slate-800 text-sm line-clamp-1" x-text="dist.title"></h3>
+                                            <p class="text-[10px] text-slate-500" x-text="'Didistribusikan: ' + formatDate(dist.distributed_at).d"></p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-lg font-black text-indigo-600" x-text="dist.percentage + '%'"></div>
+                                        <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Terbaca</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="space-y-2 mt-auto">
+                                    <div class="flex justify-between text-xs font-medium">
+                                        <span class="text-slate-500" x-text="dist.read_count + ' dari ' + dist.total_expected + ' user'"></span>
+                                        <span class="text-slate-800 font-bold" x-text="dist.percentage + '%'"></span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                        <div class="bg-emerald-500 h-full rounded-full transition-all duration-1000" :style="'width: ' + dist.percentage + '%'"></div>
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-between items-center pt-3 border-t border-slate-50">
+                                    <span class="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full font-bold uppercase tracking-tight" x-text="dist.status_label"></span>
+                                    <a :href="'/documents/' + dist.id" class="text-xs text-indigo-600 font-bold hover:text-indigo-800 flex items-center gap-1">
+                                        Lihat Detail
+                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </template>
+                    </template>
+                </div>
             </div>
         </div>
 
